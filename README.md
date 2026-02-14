@@ -1,2 +1,2 @@
-# Hotel Management & Booking Web App
-React Project
+# Hotel Booking Web App
+React project
