@@ -145,34 +145,36 @@ const Halls = () => {
     };
 
     return (
-        <div className="bg-gray-50 min-h-screen pb-20">
+        <div className="bg-gray-50 min-h-screen pb-20 pt-20">
             {/* Hero Section */}
-            <div className="relative bg-black text-white py-24 px-4 text-center">
+            <div className="relative bg-primary text-white py-20 px-4 text-center overflow-hidden">
                 <div className="absolute inset-0 overflow-hidden">
                     <img
                         src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=2098&auto=format&fit=crop"
                         alt="Luxury Hall"
-                        className="w-full h-full object-cover opacity-40"
+                        className="w-full h-full object-cover opacity-30"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/90"></div>
+                    <div className="absolute inset-0 bg-gradient-to-b from-primary/80 to-primary/95"></div>
                 </div>
-                <div className="relative z-10 max-w-4xl mx-auto">
-                    <h1 className="font-playfair text-5xl md:text-6xl font-bold mb-6">Our Venues</h1>
-                    <p className="text-xl text-gray-300 font-light max-w-2xl mx-auto">
-                        Elegant spaces for your weddings, parties, and corporate events.
+
+                <div className="relative z-10 container-custom">
+                    <span className="text-secondary font-medium tracking-widest uppercase text-sm mb-4 block">Event Spaces</span>
+                    <h1 className="font-playfair text-5xl md:text-6xl font-bold mb-6" style={{ color: '#c5a059' }}>Our Venues</h1>
+                    <p className="text-xl text-gray-200 font-light max-w-2xl mx-auto leading-relaxed">
+                        Elegant spaces meticulously designed for your weddings, parties, and corporate events. Create memories that last a lifetime.
                     </p>
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 py-12">
+            <div className="container-custom px-4 py-16">
                 {loading ? (
                     <div className="flex justify-center items-center py-20">
-                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
                     </div>
                 ) : halls.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {halls.map((hall) => (
-                            <div key={hall.id} className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group flex flex-col">
+                            <div key={hall.id} className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group flex flex-col h-full border border-gray-100">
                                 <div className="relative h-64 overflow-hidden">
                                     {hall.image_url ? (
                                         <img
@@ -181,55 +183,61 @@ const Halls = () => {
                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                         />
                                     ) : (
-                                        <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">
+                                        <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400">
                                             No Image
                                         </div>
                                     )}
-                                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-sm font-bold shadow-sm text-gray-900">
-                                        Up to {hall.capacity} Guests
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
+
+                                    <div className="absolute top-4 right-4 bg-white/95 backdrop-blur px-3 py-1 rounded-full text-xs font-bold shadow-sm text-primary uppercase tracking-wide">
+                                        Max {hall.capacity} Guests
+                                    </div>
+
+                                    <div className="absolute bottom-4 left-4 text-white">
+
+                                        <div className="flex items-baseline gap-1">
+                                            <span className="text-2xl font-bold font-playfair lg:text-3xl">${hall.price}</span>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="p-6 flex-1 flex flex-col">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <h3 className="text-2xl font-playfair font-bold text-gray-900 leading-tight">{hall.title}</h3>
+                                <div className="p-8 flex-1 flex flex-col">
+                                    <div className="mb-4">
+                                        <h3 className="text-2xl font-playfair font-bold text-gray-900 leading-tight group-hover:text-primary transition-colors">{hall.title}</h3>
+                                        <div className="flex items-center gap-2 text-gray-500 text-sm mt-2">
+                                            <MapPin size={16} className="text-secondary" />
+                                            <span>{hall.location}</span>
+                                        </div>
                                     </div>
 
-                                    <div className="flex items-center gap-2 text-gray-500 text-sm mb-4">
-                                        <MapPin size={16} className="text-amber-600" />
-                                        <span>{hall.location}</span>
-                                    </div>
-
-                                    <p className="text-gray-600 mb-6 line-clamp-2 flex-1">
+                                    <p className="text-gray-600 mb-6 line-clamp-3 text-sm leading-relaxed flex-1">
                                         {hall.description}
                                     </p>
 
-                                    <div className="bg-gray-50 rounded-xl p-4 mb-6 space-y-2">
-                                        <div className="flex items-center gap-2 text-sm text-gray-700">
-                                            <List size={16} className="text-amber-600" />
-                                            <span className="font-medium">Features:</span>
-                                            <span className="text-gray-600 truncate">{hall.features || 'Standard Amenities'}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2 text-sm text-gray-700">
-                                            <DollarSign size={16} className="text-amber-600" />
-                                            <span className="font-medium">Price:</span>
-                                            <span className="text-lg font-bold text-gray-900">${hall.price}</span>
+                                    <div className="bg-gray-50 rounded-xl p-4 mb-6 space-y-3 border border-gray-100">
+                                        <div className="flex items-start gap-3 text-sm text-gray-700">
+                                            <List size={16} className="text-secondary mt-0.5 flex-shrink-0" />
+                                            <div>
+                                                <span className="font-bold block text-gray-900 text-xs uppercase tracking-wide mb-1">Features</span>
+                                                <span className="text-gray-600 leading-snug block">{hall.features || 'Standard Amenities'}</span>
+                                            </div>
                                         </div>
                                     </div>
 
                                     <button
                                         onClick={() => openBookingModal(hall)}
-                                        className="w-full py-3 bg-gray-900 text-white font-bold rounded-xl hover:bg-amber-600 transition-colors shadow-lg shadow-gray-900/10"
+                                        className="w-full py-3.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-light transition-all shadow-lg hover:shadow-primary/30 transform hover:-translate-y-0.5 text-sm uppercase tracking-wide"
                                     >
-                                        Book Now
+                                        Book Venue
                                     </button>
                                 </div>
                             </div>
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center py-20">
+                    <div className="text-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
                         <h3 className="text-xl font-medium text-gray-900">No venues available at the moment.</h3>
+                        <p className="text-gray-500 mt-2">Please check back later.</p>
                     </div>
                 )}
             </div>

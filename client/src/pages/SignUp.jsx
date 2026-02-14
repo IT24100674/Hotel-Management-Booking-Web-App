@@ -58,53 +58,82 @@ const SignUp = () => {
     }
 
     return (
-        <div className="flex justify-center items-center min-h-screen bg-gray-100">
-            <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-                <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Sign Up</h2>
-                {error && <div className="bg-red-100 text-red-700 p-3 rounded mb-4 text-sm">{error}</div>}
-                {message && <div className="bg-green-100 text-green-700 p-3 rounded mb-4 text-sm">{message}</div>}
-                <form onSubmit={handleSignUp} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Name</label>
-                        <input
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            required
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        />
+        <div className="min-h-screen flex items-center justify-center bg-gray-900 relative overflow-hidden">
+            {/* Background Image */}
+            <div className="absolute inset-0">
+                <img
+                    src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=2070&auto=format&fit=crop"
+                    alt="Luxury Hotel Lobby"
+                    className="w-full h-full object-cover opacity-40"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/80"></div>
+            </div>
+
+            <div className="relative z-10 w-full max-w-md px-4">
+                <div className="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-8 md:p-10 border border-white/10">
+                    <div className="text-center mb-8">
+                        <Link to="/" className="inline-block mb-6">
+                            <h1 className="text-3xl font-playfair font-bold text-white tracking-wider">
+                                LUXE<span className="text-secondary">STAY</span>
+                            </h1>
+                        </Link>
+                        <h2 className="text-2xl font-playfair font-bold text-white mb-2">Create Account</h2>
+                        <p className="text-gray-300 text-sm">Join us to experience luxury at its finest.</p>
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Email</label>
-                        <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        />
+
+                    {error && <div className="bg-red-500/10 border border-red-500/20 text-red-200 p-4 rounded-xl mb-6 text-sm text-center backdrop-blur-sm">{error}</div>}
+                    {message && <div className="bg-green-500/10 border border-green-500/20 text-green-200 p-4 rounded-xl mb-6 text-sm text-center backdrop-blur-sm">{message}</div>}
+
+                    <form onSubmit={handleSignUp} className="space-y-6">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-300 uppercase tracking-wider block">Full Name</label>
+                            <input
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                required
+                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all"
+                                placeholder="John Doe"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-300 uppercase tracking-wider block">Email Address</label>
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all"
+                                placeholder="name@example.com"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-300 uppercase tracking-wider block">Password</label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                minLength={6}
+                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all"
+                                placeholder="••••••••"
+                            />
+                        </div>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className={`w-full py-3.5 rounded-xl font-bold text-white shadow-lg transition-all transform hover:-translate-y-0.5
+                                ${loading
+                                    ? 'bg-gray-600 cursor-not-allowed'
+                                    : 'bg-secondary hover:bg-amber-500 shadow-secondary/20'}`}
+                        >
+                            {loading ? 'Creating Account...' : 'Sign Up'}
+                        </button>
+                    </form>
+
+                    <div className="mt-8 text-center text-sm text-gray-400">
+                        Already have an account? <Link to="/sign-in" className="text-secondary font-bold hover:text-white transition-colors">Sign In</Link>
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Password</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            minLength={6}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        />
-                    </div>
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                        {loading ? 'Signing Up...' : 'Sign Up'}
-                    </button>
-                </form>
-                <div className="mt-4 text-center text-sm text-gray-600">
-                    Already have an account? <Link to="/sign-in" className="text-indigo-600 hover:text-indigo-500">Sign In</Link>
                 </div>
             </div>
         </div>

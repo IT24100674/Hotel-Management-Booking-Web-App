@@ -54,7 +54,7 @@ const Menu = () => {
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/90"></div>
         </div>
         <div className="relative z-10 max-w-4xl mx-auto">
-          <h1 className="font-playfair text-5xl md:text-6xl font-bold mb-6">Our Menu</h1>
+          <h1 className="font-playfair text-5xl md:text-6xl font-bold mb-6" style={{ color: '#c5a059' }}>Our Menu</h1>
           <p className="text-xl text-gray-300 font-light max-w-2xl mx-auto">
             Discover a symphony of flavors, crafted with passion and fresh ingredients.
           </p>
@@ -71,8 +71,8 @@ const Menu = () => {
                 key={category}
                 onClick={() => setSelectedCategory(category)}
                 className={`px-6 py-2 rounded-full text-sm font-semibold tracking-wide transition-all duration-300 ${selectedCategory === category
-                    ? 'bg-amber-500 text-white shadow-lg scale-105'
-                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                  ? 'bg-amber-500 text-white shadow-lg scale-105'
+                  : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                   }`}
               >
                 {category}

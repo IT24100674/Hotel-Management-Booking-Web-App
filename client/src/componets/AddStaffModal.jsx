@@ -71,83 +71,102 @@ const AddStaffModal = ({ isOpen, onClose, onAdd, onEdit, initialData, currentUse
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
-                <h2 className="text-xl font-bold mb-4">{initialData ? 'Edit Staff' : 'Add New Staff'}</h2>
-                <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md border border-gray-100 animate-in zoom-in-95 duration-200">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-playfair font-bold text-gray-900">
+                        {initialData ? 'Edit Staff Member' : 'Add New Staff'}
+                    </h2>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Name</label>
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Full Name</label>
                         <input
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-gray-900"
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                            placeholder="e.g. Sarah Smith"
                             required
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Email</label>
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Email Address</label>
                         <input
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className={`mt-1 block w-full border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm p-2 text-gray-900`}
+                            className={`w-full px-4 py-3 bg-gray-50 border ${errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-primary focus:ring-primary'} rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 transition-all`}
+                            placeholder="name@gmail.com"
                             required
                         />
-                        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+                        {errors.email && <p className="text-red-500 text-xs mt-1 font-medium">{errors.email}</p>}
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Phone No</label>
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Phone Number</label>
                         <input
                             type="tel"
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
-                            className={`mt-1 block w-full border ${errors.phone ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm p-2 text-gray-900`}
+                            className={`w-full px-4 py-3 bg-gray-50 border ${errors.phone ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-primary focus:ring-primary'} rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 transition-all`}
+                            placeholder="10-digit number"
                             required
                         />
-                        {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+                        {errors.phone && <p className="text-red-500 text-xs mt-1 font-medium">{errors.phone}</p>}
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Temp Password</label>
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Temporary Password</label>
                         <input
                             type="text"
                             value={tempPassword}
                             onChange={(e) => setTempPassword(e.target.value)}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-gray-900"
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                             required={!initialData}
-                            placeholder={initialData ? "Leave blank to keep current" : ""}
+                            placeholder={initialData ? "Leave blank to keep current" : "Create a generic password"}
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Role</label>
-                        <select
-                            value={role}
-                            onChange={(e) => setRole(e.target.value)}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-gray-900"
-                        >
-                            {currentUserRole === 'owner' && <option value="owner">Owner</option>}
-                            <option value="staff_manager">Staff Manager</option>
-                            <option value="receptionist">Receptionist</option>
-                            <option value="event_manager">Event Manager</option>
-                            <option value="room_manager">Room Manager</option>
-                            <option value="financial_manager">Financial Manager</option>
-                            <option value="content_manager">Content Manager</option>
-                            <option value="facility_manager">Facility Manager</option>
-                        </select>
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Role Assignment</label>
+                        <div className="relative">
+                            <select
+                                value={role}
+                                onChange={(e) => setRole(e.target.value)}
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none"
+                            >
+                                {currentUserRole === 'owner' && <option value="owner">Owner</option>}
+                                <option value="staff_manager">Staff Manager</option>
+                                <option value="receptionist">Receptionist</option>
+                                <option value="event_manager">Event Manager</option>
+                                <option value="room_manager">Room Manager</option>
+                                <option value="financial_manager">Financial Manager</option>
+                                <option value="content_manager">Content Manager</option>
+                                <option value="facility_manager">Facility Manager</option>
+                            </select>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex justify-end gap-2 pt-4">
+
+                    <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 mt-6">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md border border-gray-200"
+                            className="px-6 py-3 text-gray-600 font-bold hover:bg-gray-100 rounded-xl transition-colors text-sm"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
-                            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 shadow-sm"
+                            className="px-6 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-light shadow-lg hover:shadow-primary/30 transition-all transform hover:-translate-y-0.5 text-sm"
                         >
-                            {initialData ? 'Update' : 'Confirm'}
+                            {initialData ? 'Save Changes' : 'Add Staff Member'}
                         </button>
                     </div>
                 </form>
