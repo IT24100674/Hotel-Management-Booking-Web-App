@@ -180,7 +180,7 @@ const SignIn = () => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-900 relative overflow-hidden">
+        <div className="min-h-screen flex items-center justify-center bg-gray-900 relative py-20">
             {/* Background Image */}
             <div className="absolute inset-0">
                 <img
@@ -195,11 +195,11 @@ const SignIn = () => {
                 <div className="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-8 md:p-10 border border-white/10">
                     <div className="text-center mb-8">
                         <Link to="/" className="inline-block mb-6">
-                            <h1 className="text-3xl font-playfair font-bold text-white tracking-wider">
-                                LUXE<span className="text-secondary">STAY</span>
+                            <h1 className="text-3xl font-playfair font-bold tracking-wider" style={{ color: '#c5a059' }}>
+                                LUXE<span style={{ color: '#c5a059' }}>STAY</span>
                             </h1>
                         </Link>
-                        <h2 className="text-2xl font-playfair font-bold text-white mb-2">Welcome Back</h2>
+                        <h2 className="text-2xl font-playfair font-bold mb-2" style={{ color: '#c5a059' }}>Welcome Back</h2>
                         <p className="text-gray-300 text-sm">Sign in to manage your bookings and account.</p>
                     </div>
 

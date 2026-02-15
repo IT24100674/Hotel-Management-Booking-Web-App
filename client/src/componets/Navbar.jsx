@@ -14,7 +14,7 @@ const Navbar = () => {
         { name: 'Venues', path: '/halls' },
         { name: 'Menu', path: '/menu' },
         { name: 'Reviews', path: '/' }, // TODO: Create Reviews page
-        { name: 'Contact', path: '/' },
+        { name: 'Contact', path: '/contact' },
         { name: 'About', path: '/' },
     ];
 
@@ -127,12 +127,7 @@ const Navbar = () => {
 
             {/* Desktop Right */}
             <div className="hidden md:flex items-center gap-6">
-                <img
-                    src={assets.searchIcon}
-                    alt="search"
-                    className={`h-6 w-6 cursor-pointer transition-colors duration-300 ${isScrolled || !isHomePage ? "invert-0 opacity-70 hover:opacity-100" : "invert opacity-90 hover:opacity-100"
-                        }`}
-                />
+
 
                 {user ? (
                     <div className="flex items-center gap-4">

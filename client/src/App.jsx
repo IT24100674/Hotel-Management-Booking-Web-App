@@ -13,6 +13,7 @@ import ErrorBoundary from './componets/ErrorBoundary'
 import Rooms from './pages/Rooms'
 import Menu from './pages/Menu'
 import Halls from './pages/Halls'
+import Contact from './pages/Contact'
 
 // Lazy load components
 const AdminLayout = React.lazy(() => import('./pages/admin/AdminLayout'));
@@ -57,6 +58,7 @@ const App = () => {
               </Route>
               <Route path='/rooms' element={<Rooms />} />
               <Route path='/book/:roomId' element={<BookingPage />} />
+              <Route path='/contact' element={<Contact />} />
               <Route path='/payment' element={<PaymentPage />} />
               <Route path='/sign-in' element={<SignIn />} />
               <Route path='/sign-up' element={<SignUp />} />

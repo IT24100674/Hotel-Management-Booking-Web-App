@@ -58,7 +58,7 @@ const SignUp = () => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-900 relative overflow-hidden">
+        <div className="min-h-screen flex items-center justify-center bg-gray-900 relative py-20">
             {/* Background Image */}
             <div className="absolute inset-0">
                 <img
