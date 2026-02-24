@@ -62,19 +62,13 @@ const createBooking = async (req, res) => {
             check_in,
             check_out,
             total_price,
-            status: 'Confirmed' // Default to confirmed for manual bookings? Or Pending? Let's say Confirmed for now as it's admin creation.
+            status: 'Confirmed',
+            user_id: user_id || null,
+            guest_name: guest_name || null,
+            guest_email: guest_email || null,
+            guest_phone: guest_phone || null,
+            guest_id_no: guest_id_no || null
         };
-
-        if (user_id) {
-            bookingData.user_id = user_id;
-            // Also save guest_id_no if provided (e.g. from online booking form)
-            if (guest_id_no) bookingData.guest_id_no = guest_id_no;
-        } else {
-            bookingData.guest_name = guest_name;
-            bookingData.guest_email = guest_email;
-            bookingData.guest_phone = guest_phone;
-            bookingData.guest_id_no = guest_id_no;
-        }
 
         const { data, error } = await supabase
             .from('bookings')
@@ -118,16 +112,27 @@ const getAllBookings = async (req, res) => {
 // Get booking statistics (Total Income, Monthly Income)
 const getBookingStats = async (req, res) => {
     try {
-        const { data: bookings, error } = await supabase
+        // 1. Fetch Room Bookings
+        const { data: roomBookings, error: roomError } = await supabase
             .from('bookings')
             .select('total_price, created_at')
             .eq('status', 'Confirmed');
 
-        if (error) throw error;
+        if (roomError) throw roomError;
+
+        // 2. Fetch Hall Bookings
+        const { data: hallBookings, error: hallError } = await supabase
+            .from('hall_bookings')
+            .select('total_price, created_at')
+            .eq('status', 'Confirmed');
+
+        if (hallError) throw hallError;
+
+        const allBookings = [...roomBookings, ...hallBookings];
 
         const now = new Date();
         const currentYear = now.getFullYear();
-        const currentMonth = now.getMonth(); // 0-indexed
+        const currentMonth = now.getMonth();
 
         const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         const lastMonthYear = lastMonthDate.getFullYear();
@@ -137,7 +142,7 @@ const getBookingStats = async (req, res) => {
         let currentMonthIncome = 0;
         let lastMonthIncome = 0;
 
-        bookings.forEach(booking => {
+        allBookings.forEach(booking => {
             const price = parseFloat(booking.total_price) || 0;
             const date = new Date(booking.created_at);
             const year = date.getFullYear();
@@ -157,7 +162,7 @@ const getBookingStats = async (req, res) => {
             }
         });
 
-        // Calculate Percentage Change for Monthly Income
+        // Calculate Percentage Change
         let monthlyChange = 0;
         if (lastMonthIncome === 0) {
             monthlyChange = currentMonthIncome > 0 ? 100 : 0;
@@ -223,8 +228,8 @@ const cancelBooking = async (req, res) => {
         const diffMs = checkInDate - now;
         const diffHours = diffMs / (1000 * 60 * 60);
 
-        if (diffHours < 24) {
-            return res.status(400).json({ error: 'Cancellation is only allowed up to 24 hours before check-in.' });
+        if (diffHours < 48) {
+            return res.status(400).json({ error: 'Cancellation is only allowed up to 48 hours before check-in.' });
         }
 
         // 3. Update status

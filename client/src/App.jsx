@@ -14,11 +14,12 @@ import Rooms from './pages/Rooms'
 import Menu from './pages/Menu'
 import Halls from './pages/Halls'
 import Contact from './pages/Contact'
+import Reviews from './pages/Reviews'
 
 // Lazy load components
 const AdminLayout = React.lazy(() => import('./pages/admin/AdminLayout'));
 const DashboardHome = React.lazy(() => import('./pages/admin/DashboardHome'));
-const HallManagement = React.lazy(() => import('./pages/admin/HallManagement'));
+const EventPackageManagement = React.lazy(() => import('./pages/admin/HallManagement'));
 const RoomManagement = React.lazy(() => import('./pages/admin/RoomManagement'));
 const StaffManagement = React.lazy(() => import('./pages/admin/StaffManagement'));
 const FacilityManagement = React.lazy(() => import('./pages/admin/FacilityManagement'));
@@ -45,11 +46,11 @@ const App = () => {
             <Routes>
               <Route path='/' element={<Home />} />
               <Route path='/menu' element={<Menu />} />
-              <Route path='/halls' element={<Halls />} />
+              <Route path='/event-packages' element={<Halls />} />
               <Route path='/admin' element={<AdminLayout />}>
                 <Route index element={<DashboardHome />} />
                 <Route path='bookings' element={<BookingManagement />} />
-                <Route path='halls' element={<HallManagement />} />
+                <Route path='event-packages' element={<EventPackageManagement />} />
                 <Route path='rooms' element={<RoomManagement />} />
                 <Route path='staff' element={<StaffManagement />} />
                 <Route path='facilities' element={<FacilityManagement />} />
@@ -59,6 +60,7 @@ const App = () => {
               <Route path='/rooms' element={<Rooms />} />
               <Route path='/book/:roomId' element={<BookingPage />} />
               <Route path='/contact' element={<Contact />} />
+              <Route path='/reviews' element={<Reviews />} />
               <Route path='/payment' element={<PaymentPage />} />
               <Route path='/sign-in' element={<SignIn />} />
               <Route path='/sign-up' element={<SignUp />} />

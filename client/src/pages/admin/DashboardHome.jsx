@@ -47,7 +47,7 @@ const DashboardHome = () => {
             try {
                 const { data, error } = await supabase
                     .from('hall_bookings')
-                    .select('*, events(title)')
+                    .select('*, events(title, type)')
                     .order('booking_date', { ascending: false });
 
                 if (error) {
@@ -60,8 +60,6 @@ const DashboardHome = () => {
             }
 
             let mergedTransactions = [];
-            let totalIncomeWithHalls = 0;
-            let monthlyIncomeWithHalls = 0;
             let roomBookings = [];
             let roomStats = { totalIncome: 0, monthlyIncome: 0, monthlyChange: 0 };
 
@@ -72,30 +70,10 @@ const DashboardHome = () => {
                 roomStats = await statsRes.json();
             }
 
-            // Calculate Hall Stats
-            const currentMonth = new Date().getMonth();
-            const currentYear = new Date().getFullYear();
-
-            const hallIncome = hallBookings
-                .filter(b => b.status === 'Confirmed')
-                .reduce((sum, b) => sum + Number(b.total_price), 0);
-
-            const monthlyHallIncome = hallBookings
-                .filter(b => b.status === 'Confirmed')
-                .filter(b => {
-                    const d = new Date(b.booking_date);
-                    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-                })
-                .reduce((sum, b) => sum + Number(b.total_price), 0);
-
-            // Merge Stats
-            totalIncomeWithHalls = Number(roomStats.totalIncome) + hallIncome;
-            monthlyIncomeWithHalls = Number(roomStats.monthlyIncome) + monthlyHallIncome;
-
             // Update State for Stats
             setStatsData({
-                totalIncome: totalIncomeWithHalls,
-                monthlyIncome: monthlyIncomeWithHalls,
+                totalIncome: Number(roomStats.totalIncome),
+                monthlyIncome: Number(roomStats.monthlyIncome),
                 monthlyChange: roomStats.monthlyChange
             });
 
@@ -110,7 +88,7 @@ const DashboardHome = () => {
             const normalizedHalls = hallBookings.map(b => ({
                 ...b,
                 type: 'hall',
-                serviceName: b.events?.title || 'Function Hall',
+                serviceName: b.events?.title || 'Event',
                 sortDate: new Date(b.created_at)
             }));
 
@@ -196,7 +174,7 @@ const DashboardHome = () => {
                                                 <td className="py-4 text-gray-600">
                                                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${item.type === 'room' ? 'bg-indigo-50 text-indigo-700' : 'bg-amber-50 text-amber-700'
                                                         }`}>
-                                                        {item.type === 'room' ? 'Room' : 'Hall'}
+                                                        {item.type === 'room' ? 'Room' : (item.events?.type || 'Event')}
                                                     </span>
                                                 </td>
                                                 <td className="py-4 text-gray-600 font-medium">

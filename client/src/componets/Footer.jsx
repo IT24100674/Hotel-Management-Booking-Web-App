@@ -21,7 +21,7 @@ const Footer = () => {
           <h3 className="font-playfair text-lg font-semibold" style={{ color: '#c5a059' }}>Quick Links</h3>
           <ul className="flex flex-col gap-2 text-sm text-gray-400">
             <li><a href="/" className="hover:text-secondary transition-colors">Home</a></li>
-            <li><a href="/halls" className="hover:text-secondary transition-colors">Venues</a></li>
+            <li><a href="/event-packages" className="hover:text-secondary transition-colors">Event Packages</a></li>
             <li><a href="/menu" className="hover:text-secondary transition-colors">Dining Menu</a></li>
             <li><a href="/about" className="hover:text-secondary transition-colors">About Us</a></li>
           </ul>

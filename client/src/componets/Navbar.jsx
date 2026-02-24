@@ -11,9 +11,9 @@ const Navbar = () => {
     const navLinks = [
         { name: 'Home', path: '/' },
         { name: 'Rooms', path: '/rooms' },
-        { name: 'Venues', path: '/halls' },
+        { name: 'Event Packages', path: '/event-packages' },
         { name: 'Menu', path: '/menu' },
-        { name: 'Reviews', path: '/' }, // TODO: Create Reviews page
+        { name: 'Reviews', path: '/reviews' },
         { name: 'Contact', path: '/contact' },
         { name: 'About', path: '/' },
     ];

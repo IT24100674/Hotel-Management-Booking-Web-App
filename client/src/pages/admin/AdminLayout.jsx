@@ -11,7 +11,7 @@ const AdminLayout = () => {
     const allMenuItems = [
         { path: '/admin', label: 'Dashboard', roles: ['owner', 'staff_manager', 'event_manager', 'room_manager', 'facility_manager', 'restaurant_manager', 'content_manager', 'support_manager', 'manager', 'receptionist'] },
         { path: '/admin/bookings', label: 'Bookings', roles: ['owner', 'receptionist', 'room_manager'] },
-        { path: '/admin/halls', label: 'Halls', roles: ['owner', 'event_manager'] },
+        { path: '/admin/event-packages', label: 'Event Packages', roles: ['owner', 'event_manager'] },
         { path: '/admin/rooms', label: 'Rooms', roles: ['owner', 'room_manager'] },
         { path: '/admin/staff', label: 'Staff', roles: ['owner', 'staff_manager'] },
         { path: '/admin/facilities', label: 'Facilities', roles: ['owner', 'facility_manager'] },

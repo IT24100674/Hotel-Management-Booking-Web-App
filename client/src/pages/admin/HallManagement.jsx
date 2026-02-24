@@ -10,10 +10,10 @@ const HallManagement = () => {
     const [formData, setFormData] = useState({
         title: '',
         description: '',
-        location: '',
         capacity: '',
-        price: '',
+        price_per_guest: '',
         features: '',
+        type: 'Wedding',
         image_url: ''
     });
     const [imageFile, setImageFile] = useState(null);
@@ -92,14 +92,14 @@ const HallManagement = () => {
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this hall?')) {
+        if (window.confirm('Are you sure you want to delete this package?')) {
             try {
-                // 1. Find the hall to get image URL
-                const hallToDelete = halls.find(h => h.id === id);
-                if (hallToDelete && hallToDelete.image_url) {
+                // 1. Find the package to get image URL
+                const packageToDelete = halls.find(h => h.id === id);
+                if (packageToDelete && packageToDelete.image_url) {
                     // Extract filename from URL
                     // URL format: .../event_images/filename.ext
-                    const fileName = hallToDelete.image_url.split('/').pop();
+                    const fileName = packageToDelete.image_url.split('/').pop();
 
                     const { error: storageError } = await supabase.storage
                         .from('event_images')
@@ -107,8 +107,6 @@ const HallManagement = () => {
 
                     if (storageError) {
                         console.error('Error deleting image:', storageError);
-                        // We continue to delete the record even if image delete fails, 
-                        // or we could stop. For now, log and continue.
                     }
                 }
 
@@ -116,7 +114,7 @@ const HallManagement = () => {
                 const { error: bookingDeleteError } = await supabase
                     .from('hall_bookings')
                     .delete()
-                    .eq('event_id', id);
+                    .eq('hall_id', id);
 
                 if (bookingDeleteError) {
                     console.error('Error deleting associated bookings:', bookingDeleteError);
@@ -134,7 +132,7 @@ const HallManagement = () => {
 
     const openAddModal = () => {
         setEditingHall(null);
-        setFormData({ title: '', description: '', location: '', capacity: '', price: '', features: '', image_url: '' });
+        setFormData({ title: '', description: '', capacity: '', price: '', features: '', type: 'Wedding', image_url: '' });
         setImageFile(null);
         setIsModalOpen(true);
     };
@@ -144,10 +142,10 @@ const HallManagement = () => {
         setFormData({
             title: hall.title,
             description: hall.description,
-            location: hall.location,
             capacity: hall.capacity || '',
-            price: hall.price || '',
+            price_per_guest: hall.price_per_guest || '',
             features: hall.features || '',
+            type: hall.type || 'Wedding',
             image_url: hall.image_url || ''
         });
         setImageFile(null);
@@ -163,15 +161,15 @@ const HallManagement = () => {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Function Halls</h1>
-                    <p className="text-gray-500 mt-1">Manage wedding halls, party venues, and conference rooms</p>
+                    <h1 className="text-3xl font-bold text-gray-900">Event Packages</h1>
+                    <p className="text-gray-500 mt-1">Manage wedding packages, party bundles, and corporate event deals</p>
                 </div>
                 <button
                     onClick={openAddModal}
                     className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
                 >
                     <Plus size={20} />
-                    Add Hall
+                    Add Package
                 </button>
             </div>
 
@@ -197,17 +195,13 @@ const HallManagement = () => {
                             <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 text-white text-xs rounded-md">
                                 {hall.capacity} Guests
                             </div>
+                            <div className="absolute top-2 left-2 px-2 py-1 bg-indigo-600/90 text-white text-[10px] uppercase font-bold rounded shadow-sm z-10">
+                                {hall.type || 'Standard'}
+                            </div>
                         </div>
                         <div className="p-5">
-                            <div className="flex items-start justify-between">
-                                <h3 className="text-xl font-semibold text-gray-900 line-clamp-1">{hall.title}</h3>
-                                <span className="text-lg font-bold text-indigo-600">${hall.price}</span>
-                            </div>
+                            <span className="text-lg font-bold text-indigo-600">${hall.price_per_guest} <span className="text-xs text-gray-400 font-normal">/ guest</span></span>
                             <div className="mt-2 space-y-2 text-sm text-gray-600">
-                                <div className="flex items-center gap-2">
-                                    <MapPin size={16} className="text-gray-400" />
-                                    <span>{hall.location}</span>
-                                </div>
                                 {hall.features && (
                                     <div className="flex items-start gap-2">
                                         <List size={16} className="text-gray-400 mt-0.5" />
@@ -221,18 +215,31 @@ const HallManagement = () => {
                 ))}
             </div>
 
-            <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingHall ? 'Edit Hall' : 'New Hall'}>
+            <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingHall ? 'Edit Package' : 'New Package'}>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Hall Name</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Package Name</label>
                         <input
                             type="text"
                             required
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                             value={formData.title}
                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                            placeholder="e.g. Grand Ballroom"
+                            placeholder="e.g. Gold Wedding Package"
                         />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Package Type</label>
+                        <select
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all bg-white"
+                            value={formData.type}
+                            onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                        >
+                            <option value="Wedding">Wedding</option>
+                            <option value="Birthday">Birthday</option>
+                            <option value="Family Party">Family Party</option>
+                            <option value="Meeting">Meeting</option>
+                        </select>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
@@ -242,17 +249,6 @@ const HallManagement = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                        <input
-                            type="text"
-                            required
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                            value={formData.location}
-                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                            placeholder="e.g. 1st Floor, West Wing"
                         />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -270,15 +266,15 @@ const HallManagement = () => {
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Full Price</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Price per Guest</label>
                             <div className="relative">
                                 <DollarSign size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                 <input
                                     type="number"
                                     required
                                     className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                                    value={formData.price}
-                                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                                    value={formData.price_per_guest}
+                                    onChange={(e) => setFormData({ ...formData, price_per_guest: e.target.value })}
                                 />
                             </div>
                         </div>
@@ -294,7 +290,7 @@ const HallManagement = () => {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Hall Image</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Package Image</label>
                         <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-indigo-500 transition-colors cursor-pointer relative group bg-gray-50">
                             <div className="space-y-1 text-center">
                                 {imageFile ? (
@@ -342,7 +338,7 @@ const HallManagement = () => {
                             className={`px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2 ${uploading ? 'opacity-70 cursor-not-allowed' : ''}`}
                         >
                             {uploading && <Loader size={16} className="animate-spin" />}
-                            {editingHall ? 'Save Changes' : 'Add Hall'}
+                            {editingHall ? 'Save Changes' : 'Add Package'}
                         </button>
                     </div>
                 </form>

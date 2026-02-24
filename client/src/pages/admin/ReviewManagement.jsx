@@ -107,8 +107,8 @@ const ReviewManagement = () => {
 
                         <div className="text-xs text-gray-400 w-full flex justify-between items-center">
                             <span>{new Date(review.created_at).toLocaleDateString()}</span>
-                            {review.event_id && <span>Event ID: {review.event_id}</span>}
-                            {review.room_id && <span>Room ID: {review.room_id}</span>}
+                            {review.events?.title && <span className="font-medium text-amber-600">Event: {review.events.title}</span>}
+                            {review.rooms?.room_number && <span className="font-medium text-indigo-600">Room: {review.rooms.room_number}</span>}
                         </div>
 
                         <div className="w-full flex justify-end gap-2 pt-2 border-t border-gray-100 mt-auto">

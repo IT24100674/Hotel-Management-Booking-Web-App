@@ -34,11 +34,19 @@ const getEventById = async (req, res) => {
 
 // Create a new event
 const createEvent = async (req, res) => {
-    const { title, description, location, image_url, capacity, price, features } = req.body;
+    const { title, description, image_url, capacity, price_per_guest, features, type } = req.body;
     try {
         const { data, error } = await supabase
             .from('events')
-            .insert([{ title, description, location, image_url, capacity, price, features }])
+            .insert([{
+                title,
+                description,
+                image_url,
+                capacity,
+                price_per_guest,
+                features,
+                type
+            }])
             .select();
 
         if (error) throw error;

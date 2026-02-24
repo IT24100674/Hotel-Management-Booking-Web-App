@@ -5,7 +5,11 @@ const getReviews = async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('reviews')
-            .select('*')
+            .select(`
+                *,
+                events:event_id(title),
+                rooms:room_id(room_number)
+            `)
             .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -34,11 +38,11 @@ const getReviewById = async (req, res) => {
 
 // Create a new review
 const createReview = async (req, res) => {
-    const { user_name, rating, comment, event_id, room_id, status } = req.body;
+    const { user_name, rating, comment, event_id, room_id, status, booking_id, hall_booking_id } = req.body;
     try {
         const { data, error } = await supabase
             .from('reviews')
-            .insert([{ user_name, rating, comment, event_id, room_id, status }])
+            .insert([{ user_name, rating, comment, event_id, room_id, status, booking_id, hall_booking_id }])
             .select();
 
         if (error) throw error;

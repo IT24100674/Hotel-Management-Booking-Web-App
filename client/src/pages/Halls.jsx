@@ -43,7 +43,7 @@ const Halls = () => {
             const { data, error } = await supabase
                 .from('events') // Querying 'events' table which now represents halls
                 .select('*')
-                .order('price', { ascending: true });
+                .order('price_per_guest', { ascending: true });
 
             if (error) throw error;
             setHalls(data || []);
@@ -93,11 +93,18 @@ const Halls = () => {
                 return;
             }
 
+            // --- CAPACITY CHECK ---
+            if (bookingData.guest_count > selectedHall.capacity) {
+                alert(`The selected package has a maximum capacity of ${selectedHall.capacity} guests. Please reduce the guest count or choose a different package.`);
+                setSubmitting(false);
+                return;
+            }
+
             // --- AVAILABILITY CHECK ---
             const { data: existingBookings, error: checkError } = await supabase
                 .from('hall_bookings')
                 .select('id')
-                .eq('event_id', selectedHall.id)
+                .eq('hall_id', selectedHall.id)
                 .eq('booking_date', bookingData.date)
                 .eq('session_type', bookingData.session_type)
                 .neq('status', 'Cancelled');
@@ -112,16 +119,16 @@ const Halls = () => {
             // ---------------------------
 
             const bookingPayload = {
-                event_id: selectedHall.id,
+                hall_id: selectedHall.id,
                 user_id: user.id,
-                guest_name: bookingData.customer_name,
-                guest_email: bookingData.customer_email,
-                guest_phone: bookingData.customer_phone,
-                guest_id_no: bookingData.customer_id_no,
+                customer_name: bookingData.customer_name,
+                customer_email: bookingData.customer_email,
+                customer_phone: bookingData.customer_phone,
+                customer_id_no: bookingData.customer_id_no,
                 booking_date: bookingData.date,
                 session_type: bookingData.session_type,
                 guest_count: bookingData.guest_count,
-                total_price: selectedHall.price
+                total_price: selectedHall.price_per_guest * (bookingData.guest_count || 1)
             };
 
             console.log("Navigating to payment with payload:", bookingPayload);
@@ -144,6 +151,13 @@ const Halls = () => {
         }
     };
 
+    const [activeFilter, setActiveFilter] = useState('All');
+    const categories = ['All', 'Wedding', 'Birthday', 'Family Party', 'Meeting'];
+
+    const filteredHalls = activeFilter === 'All'
+        ? halls
+        : halls.filter(h => h.type === activeFilter);
+
     return (
         <div className="bg-gray-50 min-h-screen pb-20 pt-20">
             {/* Hero Section */}
@@ -158,22 +172,39 @@ const Halls = () => {
                 </div>
 
                 <div className="relative z-10 container-custom">
-                    <span className="text-secondary font-medium tracking-widest uppercase text-sm mb-4 block">Event Spaces</span>
-                    <h1 className="font-playfair text-5xl md:text-6xl font-bold mb-6" style={{ color: '#c5a059' }}>Our Venues</h1>
+                    <span className="text-secondary font-medium tracking-widest uppercase text-sm mb-4 block">Special Occasions</span>
+                    <h1 className="font-playfair text-5xl md:text-6xl font-bold mb-6" style={{ color: '#c5a059' }}>Event Packages</h1>
                     <p className="text-xl text-gray-200 font-light max-w-2xl mx-auto leading-relaxed">
-                        Elegant spaces meticulously designed for your weddings, parties, and corporate events. Create memories that last a lifetime.
+                        Curated experiences meticulously designed for your weddings, parties, and corporate events. Choose the perfect package for your celebration.
                     </p>
                 </div>
             </div>
 
-            <div className="container-custom px-4 py-16">
+            <div className="container-custom px-4">
+                {/* Filter Bar */}
+                <div className="flex flex-wrap justify-center gap-3 pt-12 pb-8">
+                    {categories.map((category) => (
+                        <button
+                            key={category}
+                            onClick={() => setActiveFilter(category)}
+                            className={`px-8 py-3 rounded-full text-sm font-medium transition-all duration-300 shadow-sm border
+                                ${activeFilter === category
+                                    ? 'bg-[#1e3a5f] text-white border-[#1e3a5f] shadow-md transform scale-105'
+                                    : 'bg-white text-gray-600 border-gray-100 hover:border-[#1e3a5f] hover:text-[#1e3a5f]'
+                                }`}
+                        >
+                            {category}
+                        </button>
+                    ))}
+                </div>
+
                 {loading ? (
                     <div className="flex justify-center items-center py-20">
                         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
                     </div>
-                ) : halls.length > 0 ? (
+                ) : filteredHalls.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {halls.map((hall) => (
+                        {filteredHalls.map((hall) => (
                             <div key={hall.id} className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group flex flex-col h-full border border-gray-100">
                                 <div className="relative h-64 overflow-hidden">
                                     {hall.image_url ? (
@@ -193,10 +224,15 @@ const Halls = () => {
                                         Max {hall.capacity} Guests
                                     </div>
 
+                                    <div className="absolute top-4 left-4 bg-secondary/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-bold shadow-sm text-primary uppercase tracking-widest z-10">
+                                        {hall.type || 'Event'}
+                                    </div>
+
                                     <div className="absolute bottom-4 left-4 text-white">
 
                                         <div className="flex items-baseline gap-1">
-                                            <span className="text-2xl font-bold font-playfair lg:text-3xl">${hall.price}</span>
+                                            <span className="text-2xl font-bold font-playfair lg:text-3xl">${hall.price_per_guest}</span>
+                                            <span className="text-sm font-medium opacity-80 mt-1">/ guest</span>
                                         </div>
                                     </div>
                                 </div>
@@ -204,10 +240,6 @@ const Halls = () => {
                                 <div className="p-8 flex-1 flex flex-col">
                                     <div className="mb-4">
                                         <h3 className="text-2xl font-playfair font-bold text-gray-900 leading-tight group-hover:text-primary transition-colors">{hall.title}</h3>
-                                        <div className="flex items-center gap-2 text-gray-500 text-sm mt-2">
-                                            <MapPin size={16} className="text-secondary" />
-                                            <span>{hall.location}</span>
-                                        </div>
                                     </div>
 
                                     <p className="text-gray-600 mb-6 line-clamp-3 text-sm leading-relaxed flex-1">
@@ -228,7 +260,7 @@ const Halls = () => {
                                         onClick={() => openBookingModal(hall)}
                                         className="w-full py-3.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-light transition-all shadow-lg hover:shadow-primary/30 transform hover:-translate-y-0.5 text-sm uppercase tracking-wide"
                                     >
-                                        Book Venue
+                                        Select Package
                                     </button>
                                 </div>
                             </div>
@@ -330,8 +362,11 @@ const Halls = () => {
                             </div>
 
                             <div className="bg-gray-50 p-4 rounded-xl flex justify-between items-center text-sm">
-                                <span className="text-gray-600">Total Estimated Price:</span>
-                                <span className="text-xl font-bold text-amber-600">${selectedHall.price}</span>
+                                <div className="flex flex-col">
+                                    <span className="text-gray-600">Total Estimated Price:</span>
+                                    <span className="text-xs text-gray-400">({bookingData.guest_count || 1} guests x ${selectedHall.price_per_guest})</span>
+                                </div>
+                                <span className="text-xl font-bold text-amber-600">${(bookingData.guest_count || 1) * (selectedHall?.price_per_guest || 0)}</span>
                             </div>
 
                             <button

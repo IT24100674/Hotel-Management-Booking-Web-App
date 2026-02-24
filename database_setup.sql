@@ -11,10 +11,9 @@ create table public.events (
   id uuid default uuid_generate_v4() primary key,
   title text not null,
   description text,
-  location text not null,
   image_url text,
   capacity integer,
-  price numeric,
+  price_per_guest numeric,
   features text,
   type text default 'Wedding Hall', -- e.g. Wedding Hall, Party Hall
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
@@ -121,6 +120,8 @@ create table public.reviews (
   status text default 'Pending',
   event_id uuid references public.events(id),
   room_id uuid references public.rooms(id),
+  booking_id uuid references public.bookings(id),
+  hall_booking_id uuid references public.hall_bookings(id),
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 

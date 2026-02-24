@@ -29,6 +29,7 @@ const BookingManagement = () => {
         bookingDate: '',
         sessionType: 'Morning',
         totalPrice: 0,
+        guestCount: 1,
         isGuest: false
     });
     const [submitting, setSubmitting] = useState(false);
@@ -59,7 +60,7 @@ const BookingManagement = () => {
                     .from('hall_bookings')
                     .select(`
                         *,
-                        events (title)
+                        events (title, type)
                     `)
                     .order('booking_date', { ascending: false });
 
@@ -93,7 +94,7 @@ const BookingManagement = () => {
             const normalizedHallBookings = hallBookingsData.map(b => ({
                 ...b,
                 type: 'hall',
-                serviceName: b.events?.title || 'Function Hall',
+                serviceName: b.events?.title || 'Event',
                 dateDisplay: `${new Date(b.booking_date).toLocaleDateString()} (${b.session_type})`,
                 sortDate: (() => {
                     const d = new Date(b.booking_date);
@@ -185,17 +186,30 @@ const BookingManagement = () => {
 
         try {
             let user_id = null;
+            let foundUserData = { name: null, email: null, phone: null };
 
             if (!formData.isGuest) {
-                const { data: existingUser } = await supabase
-                    .from('users')
-                    .select('id')
-                    .eq('email', formData.guestEmail)
-                    .single();
+                const searchEmail = formData.guestEmail.trim();
+                console.log('Searching for registered user with email:', searchEmail);
 
-                if (existingUser) {
-                    user_id = existingUser.id;
+                const { data: users, error: searchError } = await supabase
+                    .from('users')
+                    .select('id, email, name')
+                    .ilike('email', searchEmail);
+
+                console.log('Supabase user search results:', { users, searchError });
+
+                if (users && users.length > 0) {
+                    const foundUser = users[0];
+                    user_id = foundUser.id;
+                    foundUserData = {
+                        name: foundUser.name,
+                        email: foundUser.email,
+                        phone: null // users table might not have phone, if it does we add it
+                    };
+                    console.log('Found user:', foundUser);
                 } else {
+                    console.warn('No user found matching:', searchEmail);
                     alert("User not found. Use 'Walk-in / Guest' option if they don't have an account.");
                     setSubmitting(false);
                     return;
@@ -205,11 +219,19 @@ const BookingManagement = () => {
             if (formData.bookingType === 'hall') {
                 // --- HALL BOOKING ---
 
+                // --- CAPACITY CHECK ---
+                const selectedHall = halls.find(h => h.id === formData.hallId);
+                if (selectedHall && formData.guestCount > selectedHall.capacity) {
+                    alert(`The selected package "${selectedHall.title}" has a maximum capacity of ${selectedHall.capacity} guests. Please reduce the guest count.`);
+                    setSubmitting(false);
+                    return;
+                }
+
                 // --- AVAILABILITY CHECK ---
                 let query = supabase
                     .from('hall_bookings')
                     .select('id')
-                    .eq('event_id', formData.hallId)
+                    .eq('hall_id', formData.hallId)
                     .eq('booking_date', formData.bookingDate)
                     .eq('session_type', formData.sessionType)
                     .neq('status', 'Cancelled');
@@ -229,25 +251,18 @@ const BookingManagement = () => {
                 }
                 // ---------------------------
                 const payload = {
-                    event_id: formData.hallId,
+                    hall_id: formData.hallId,
                     booking_date: formData.bookingDate,
                     session_type: formData.sessionType,
                     status: 'Confirmed',
                     total_price: formData.totalPrice,
-                    user_id: user_id
+                    guest_count: formData.guestCount,
+                    user_id: user_id,
+                    customer_name: formData.isGuest ? formData.guestName : foundUserData.name,
+                    customer_email: formData.isGuest ? formData.guestEmail : foundUserData.email,
+                    customer_phone: formData.isGuest ? formData.guestPhone : foundUserData.phone,
+                    customer_id_no: formData.guestId // Still capture ID
                 };
-
-                if (formData.isGuest) {
-                    payload.guest_name = formData.guestName;
-                    payload.guest_email = formData.guestEmail;
-                    payload.guest_phone = formData.guestPhone;
-                    payload.guest_id_no = formData.guestId;
-                } else {
-                    payload.guest_name = null;
-                    payload.guest_email = null;
-                    payload.guest_phone = null;
-                    payload.guest_id_no = null;
-                }
 
                 const { error } = await supabase
                     .from('hall_bookings')
@@ -256,27 +271,18 @@ const BookingManagement = () => {
 
             } else {
                 // --- ROOM BOOKING ---
-                let payload = {
+                const payload = {
                     room_id: formData.roomId,
                     check_in: formData.checkIn,
                     check_out: formData.checkOut,
                     total_price: formData.totalPrice,
-                    status: 'Confirmed'
+                    status: 'Confirmed',
+                    user_id: user_id,
+                    guest_name: formData.isGuest ? formData.guestName : foundUserData.name,
+                    guest_email: formData.isGuest ? formData.guestEmail : foundUserData.email,
+                    guest_phone: formData.isGuest ? formData.guestPhone : foundUserData.phone,
+                    guest_id_no: formData.guestId
                 };
-
-                if (formData.isGuest) {
-                    payload.guest_name = formData.guestName;
-                    payload.guest_email = formData.guestEmail;
-                    payload.guest_phone = formData.guestPhone;
-                    payload.guest_id_no = formData.guestId;
-                    payload.user_id = null;
-                } else {
-                    payload.user_id = user_id;
-                    payload.guest_name = null;
-                    payload.guest_email = null;
-                    payload.guest_phone = null;
-                    payload.guest_id_no = null;
-                }
 
                 const res = await fetch('http://localhost:5000/api/bookings', {
                     method: 'POST',
@@ -317,7 +323,9 @@ const BookingManagement = () => {
             // Hall Price
             if (!formData.hallId) return 0;
             const hall = halls.find(h => h.id === formData.hallId);
-            return hall ? hall.price : 0;
+            const pricePerGuest = hall ? (hall.price_per_guest || 0) : 0;
+            const count = parseInt(formData.guestCount);
+            return isNaN(count) ? 0 : pricePerGuest * count;
         }
     };
 
@@ -325,7 +333,7 @@ const BookingManagement = () => {
     useEffect(() => {
         const price = calculatePrice();
         setFormData(prev => ({ ...prev, totalPrice: price }));
-    }, [formData.roomId, formData.checkIn, formData.checkOut, rooms, formData.bookingType, formData.hallId, halls, formData.bookingDate]);
+    }, [formData.roomId, formData.checkIn, formData.checkOut, rooms, formData.bookingType, formData.hallId, halls, formData.bookingDate, formData.guestCount]);
 
 
     return (
@@ -346,7 +354,7 @@ const BookingManagement = () => {
 
             {/* Tabs */}
             <div className="flex p-1 bg-gray-100 rounded-xl w-fit">
-                {['all', 'rooms', 'halls'].map((tab) => {
+                {['all', 'rooms', 'events'].map((tab) => {
                     const count = tab === 'all'
                         ? bookings.length
                         : bookings.filter(b => b.type === (tab === 'rooms' ? 'room' : 'hall')).length;
@@ -407,7 +415,7 @@ const BookingManagement = () => {
                                             {booking.users?.name || booking.guest_name || booking.customer_name || 'Guest'}
                                         </div>
                                         <div className="text-xs text-gray-500">
-                                            {booking.users?.email || booking.guest_email || booking.customer_email || 'N/A'}
+                                            {booking.users?.email || booking.customer_email || booking.guest_email || 'N/A'}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
@@ -432,7 +440,7 @@ const BookingManagement = () => {
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 rounded text-xs font-medium ${booking.type === 'room' ? 'bg-indigo-50 text-indigo-700' : 'bg-amber-50 text-amber-700'
                                             }`}>
-                                            {booking.type === 'room' ? 'Room' : 'Hall'}
+                                            {booking.type === 'room' ? 'Room' : (booking.events?.type || 'Event')}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-right">
@@ -479,8 +487,8 @@ const BookingManagement = () => {
                                 <div className="text-amber-600 mb-2 group-hover:scale-110 transition-transform">
                                     <Calendar size={32} className="mx-auto" />
                                 </div>
-                                <div className="font-bold text-gray-900">Hall Booking</div>
-                                <div className="text-sm text-gray-500">For events & functions</div>
+                                <div className="font-bold text-gray-900">Event Booking</div>
+                                <div className="text-sm text-gray-500">For curated events & packages</div>
                             </button>
                         </div>
                         <button
@@ -499,7 +507,7 @@ const BookingManagement = () => {
                     <div className="bg-white rounded-xl p-6 w-full max-w-md overflow-y-auto max-h-[90vh]">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-xl font-bold">
-                                New {formData.bookingType === 'room' ? 'Room' : 'Hall'} Reservation
+                                New {formData.bookingType === 'room' ? 'Room' : 'Event'} Reservation
                             </h2>
                             <button onClick={() => setIsFormatModalOpen(false)} className="text-gray-400 hover:text-gray-600">
                                 <XCircle size={24} />
@@ -625,18 +633,18 @@ const BookingManagement = () => {
                                 </>
                             ) : (
                                 <>
-                                    {/* HALL BOOKING FIELDS */}
+                                    {/* EVENT BOOKING FIELDS */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Hall / Venue</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Event Type</label>
                                         <select
                                             className="w-full border border-gray-300 rounded-lg p-2"
                                             required
                                             value={formData.hallId}
                                             onChange={e => setFormData({ ...formData, hallId: e.target.value })}
                                         >
-                                            <option value="">Select Venue</option>
+                                            <option value="">Select Package</option>
                                             {halls.map(h => (
-                                                <option key={h.id} value={h.id}>{h.title} - ${h.price}</option>
+                                                <option key={h.id} value={h.id}>{h.title} - ${h.price_per_guest}/guest</option>
                                             ))}
                                         </select>
                                     </div>
@@ -664,6 +672,18 @@ const BookingManagement = () => {
                                                 <option value="Evening">Evening</option>
                                             </select>
                                         </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Number of Guests</label>
+                                        <input
+                                            type="number"
+                                            required
+                                            min="1"
+                                            value={formData.guestCount}
+                                            onChange={e => setFormData({ ...formData, guestCount: e.target.value })}
+                                            className="w-full border border-gray-300 rounded-lg p-2"
+                                            placeholder="Enter guest count"
+                                        />
                                     </div>
                                 </>
                             )}

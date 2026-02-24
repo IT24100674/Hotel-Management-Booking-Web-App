@@ -1,0 +1,12 @@
+{
+  "hall_id": "EXISTS",
+  "event_id": "MISSING (column hall_bookings.event_id does not exist)",
+  "customer_name": "EXISTS",
+  "guest_name": "EXISTS",
+  "customer_email": "EXISTS",
+  "guest_email": "EXISTS",
+  "customer_phone": "EXISTS",
+  "guest_phone": "EXISTS",
+  "customer_id_no": "MISSING (column hall_bookings.customer_id_no does not exist)",
+  "guest_id_no": "EXISTS"
+}

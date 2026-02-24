@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { User, Mail, Save, Loader, Lock, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { User, Mail, Phone, Calendar, LogOut, Shield, ChevronRight, AlertCircle, Pencil, Save, X, Star, Loader, Lock } from 'lucide-react';
 
 const UserProfile = () => {
     const [user, setUser] = useState(null);
@@ -14,6 +15,16 @@ const UserProfile = () => {
     const [activeTab, setActiveTab] = useState('profile');
     const [bookings, setBookings] = useState([]);
     const [loadingBookings, setLoadingBookings] = useState(false);
+
+    // Review Modal States
+    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+    const [selectedBookingForReview, setSelectedBookingForReview] = useState(null);
+    const [reviewFormData, setReviewFormData] = useState({
+        rating: 5,
+        comment: ''
+    });
+    const [reviewedBookingIds, setReviewedBookingIds] = useState(new Set());
+    const [submittingReview, setSubmittingReview] = useState(false);
 
     useEffect(() => {
         fetchUserProfile();
@@ -67,8 +78,7 @@ const UserProfile = () => {
                     *,
                     events (
                         title,
-                        image_url,
-                        location
+                        image_url
                     )
                 `)
                 .eq('user_id', userId)
@@ -83,6 +93,20 @@ const UserProfile = () => {
             const allBookings = [...normalizedRooms, ...normalizedHalls].sort((a, b) => b.sortDate - a.sortDate);
 
             setBookings(allBookings);
+
+            // Also fetch reviews to see which bookings are already reviewed
+            const { data: reviewsData } = await supabase
+                .from('reviews')
+                .select('booking_id, hall_booking_id')
+                .or(`booking_id.not.is.null, hall_booking_id.not.is.null`);
+
+            const reviewedIds = new Set();
+            reviewsData?.forEach(r => {
+                if (r.booking_id) reviewedIds.add(r.booking_id);
+                if (r.hall_booking_id) reviewedIds.add(r.hall_booking_id);
+            });
+            setReviewedBookingIds(reviewedIds);
+
         } catch (err) {
             console.error("Failed to fetch bookings", err);
         } finally {
@@ -128,6 +152,26 @@ const UserProfile = () => {
 
         try {
             if (type === 'hall') {
+                // 1. Fetch booking to check date
+                const { data: booking, error: fetchError } = await supabase
+                    .from('hall_bookings')
+                    .select('*')
+                    .eq('id', bookingId)
+                    .single();
+
+                if (fetchError) throw fetchError;
+
+                // 2. Check time constraint (10 days = 240h before booking_date)
+                const bookingDate = new Date(booking.booking_date);
+                const now = new Date();
+                const diffMs = bookingDate - now;
+                const diffHours = diffMs / (1000 * 60 * 60);
+
+                if (diffHours < 240) {
+                    throw new Error('Event Package cancellation is only allowed up to 10 days before the event.');
+                }
+
+                // 3. Update status
                 const { error } = await supabase
                     .from('hall_bookings')
                     .update({ status: 'Cancelled' })
@@ -150,6 +194,51 @@ const UserProfile = () => {
             fetchBookings(user.id); // Refresh list
         } catch (err) {
             alert(err.message);
+        }
+    };
+
+    const handleOpenReviewModal = (booking) => {
+        setSelectedBookingForReview(booking);
+        setReviewFormData({ rating: 5, comment: '' });
+        setIsReviewModalOpen(true);
+    };
+
+    const handleSubmitReview = async (e) => {
+        e.preventDefault();
+        if (!selectedBookingForReview) return;
+        setSubmittingReview(true);
+
+        try {
+            const payload = {
+                user_name: user.name || user.email,
+                rating: reviewFormData.rating,
+                comment: reviewFormData.comment,
+                status: 'Pending', // Reviews need approval
+                event_id: selectedBookingForReview.type === 'hall' ? selectedBookingForReview.hall_id : null,
+                room_id: selectedBookingForReview.type === 'room' ? selectedBookingForReview.room_id : null,
+                booking_id: selectedBookingForReview.type === 'room' ? selectedBookingForReview.id : null,
+                hall_booking_id: selectedBookingForReview.type === 'hall' ? selectedBookingForReview.id : null
+            };
+
+            const response = await fetch('http://localhost:5000/api/reviews', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to submit review');
+            }
+
+            alert('Thank you! Your review has been submitted.');
+            setIsReviewModalOpen(false);
+            // Refresh reviews state
+            setReviewedBookingIds(prev => new Set([...prev, selectedBookingForReview.id]));
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            setSubmittingReview(false);
         }
     };
 
@@ -316,7 +405,11 @@ const UserProfile = () => {
                                 <div className="bg-blue-50 text-blue-700 p-4 rounded-xl mb-6 text-sm border border-blue-100 flex items-start gap-3">
                                     <div className="mt-0.5"><AlertCircle size={16} /></div>
                                     <div>
-                                        <strong>Cancellation Policy (Rooms Only):</strong> Cancellations can only be made up to 24 hours before the check-in date. Hall bookings cannot be cancelled online.
+                                        <strong>Cancellation Policy:</strong>
+                                        <ul className="list-disc ml-4 mt-1">
+                                            <li><strong>Rooms:</strong> Up to 48 hours before check-in.</li>
+                                            <li><strong>Event Packages:</strong> Up to 10 days before the event date.</li>
+                                        </ul>
                                     </div>
                                 </div>
                                 {loadingBookings ? (
@@ -385,11 +478,7 @@ const UserProfile = () => {
 
                                                         {booking.status === 'Confirmed' && (
                                                             booking.type === 'hall' ? (
-                                                                <span className="text-xs text-gray-400 italic" title="Contact admin for cancellation">
-                                                                    Cancellation unavailable
-                                                                </span>
-                                                            ) : (
-                                                                (new Date(booking.check_in) - new Date() > 24 * 60 * 60 * 1000) ? (
+                                                                (new Date(booking.booking_date) - new Date() > 10 * 24 * 60 * 60 * 1000) ? (
                                                                     <button
                                                                         onClick={() => handleCancelBooking(booking.id, booking.type)}
                                                                         className="text-sm text-red-600 hover:text-red-800 font-medium underline transition-colors"
@@ -397,10 +486,36 @@ const UserProfile = () => {
                                                                         Cancel Booking
                                                                     </button>
                                                                 ) : (
-                                                                    <span className="text-xs text-gray-400 italic" title="Less than 24 hours before check-in">
+                                                                    <span className="text-xs text-gray-400 italic" title="Less than 10 days before event">
                                                                         Cancellation unavailable
                                                                     </span>
                                                                 )
+                                                            ) : (
+                                                                (new Date(booking.check_in) - new Date() > 48 * 60 * 60 * 1000) ? (
+                                                                    <button
+                                                                        onClick={() => handleCancelBooking(booking.id, booking.type)}
+                                                                        className="text-sm text-red-600 hover:text-red-800 font-medium underline transition-colors"
+                                                                    >
+                                                                        Cancel Booking
+                                                                    </button>
+                                                                ) : (
+                                                                    <span className="text-xs text-gray-400 italic" title="Less than 48 hours before check-in">
+                                                                        Cancellation unavailable
+                                                                    </span>
+                                                                )
+                                                            )
+                                                        )}
+
+                                                        {booking.status === 'Confirmed' && (
+                                                            reviewedBookingIds.has(booking.id) ? (
+                                                                <span className="text-xs text-green-600 font-medium">Review Submitted</span>
+                                                            ) : (
+                                                                <button
+                                                                    onClick={() => handleOpenReviewModal(booking)}
+                                                                    className="text-sm px-4 py-1.5 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 font-medium transition-colors border border-amber-200"
+                                                                >
+                                                                    Write Review
+                                                                </button>
                                                             )
                                                         )}
                                                     </div>
@@ -414,7 +529,7 @@ const UserProfile = () => {
                                         <div className="flex justify-center gap-4">
                                             <a href="/rooms" className="text-amber-600 font-medium hover:underline">Browse Rooms</a>
                                             <span className="text-gray-300">|</span>
-                                            <a href="/halls" className="text-amber-600 font-medium hover:underline">Browse Venues</a>
+                                            <a href="/event-packages" className="text-amber-600 font-medium hover:underline">Browse Event Packages</a>
                                         </div>
                                     </div>
                                 )}
@@ -423,6 +538,62 @@ const UserProfile = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Review Modal */}
+            {isReviewModalOpen && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-2xl font-bold text-gray-900 font-playfair">Review Your Stay</h3>
+                            <button onClick={() => setIsReviewModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-1">
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSubmitReview} className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-3">Rating</label>
+                                <div className="flex gap-2">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <button
+                                            key={star}
+                                            type="button"
+                                            onClick={() => setReviewFormData({ ...reviewFormData, rating: star })}
+                                            className="focus:outline-none transition-transform hover:scale-110"
+                                        >
+                                            <Star
+                                                size={32}
+                                                fill={star <= reviewFormData.rating ? '#d97706' : 'none'}
+                                                className={star <= reviewFormData.rating ? 'text-amber-600' : 'text-gray-300'}
+                                            />
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Your Experience</label>
+                                <textarea
+                                    required
+                                    rows="4"
+                                    className="w-full border-gray-200 border rounded-xl p-4 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none text-gray-700 placeholder-gray-400"
+                                    placeholder="Tell others about your experience..."
+                                    value={reviewFormData.comment}
+                                    onChange={(e) => setReviewFormData({ ...reviewFormData, comment: e.target.value })}
+                                ></textarea>
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={submittingReview}
+                                className="w-full bg-amber-600 text-white font-bold py-4 rounded-xl hover:bg-amber-700 transition-all shadow-lg shadow-amber-600/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {submittingReview ? <Loader size={20} className="animate-spin" /> : 'Submit Review'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
