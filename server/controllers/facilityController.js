@@ -34,11 +34,18 @@ const getFacilityById = async (req, res) => {
 
 // Create a new facility
 const createFacility = async (req, res) => {
-    const { name, description, status, image_url } = req.body;
+    const { name, description, status, image_url, price_per_hour, max_capacity } = req.body;
     try {
         const { data, error } = await supabase
             .from('facilities')
-            .insert([{ name, description, status, image_url }])
+            .insert([{
+                name,
+                description,
+                status,
+                image_url,
+                price_per_hour: price_per_hour || 0,
+                max_capacity: max_capacity || 1
+            }])
             .select();
 
         if (error) throw error;

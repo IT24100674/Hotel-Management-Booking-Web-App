@@ -19,7 +19,11 @@ const facilityRoutes = require('./routes/facilityRoutes');
 const menuRoutes = require('./routes/menuRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const userRoutes = require('./routes/userRoutes');
-const bookingRoutes = require('./routes/bookingRoutes');
+const roomBookingRoutes = require('./routes/roomBookingRoutes');
+const eventBookingRoutes = require('./routes/eventBookingRoutes');
+const facilityBookingRoutes = require('./routes/facilityBookingRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
+const faqRoutes = require('./routes/faqRoutes');
 
 app.use('/api/events', eventRoutes);
 app.use('/api/rooms', roomRoutes);
@@ -28,7 +32,11 @@ app.use('/api/facilities', facilityRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/bookings', bookingRoutes);
+app.use('/api/room-bookings', roomBookingRoutes);
+app.use('/api/event-bookings', eventBookingRoutes);
+app.use('/api/facility-bookings', facilityBookingRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/faqs', faqRoutes);
 
 app.get('/', (req, res) => {
     res.send('API is running...');

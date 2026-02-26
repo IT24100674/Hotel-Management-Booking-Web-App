@@ -15,17 +15,22 @@ import Menu from './pages/Menu'
 import Halls from './pages/Halls'
 import Contact from './pages/Contact'
 import Reviews from './pages/Reviews'
+import Facilities from './pages/Facilities'
 
 // Lazy load components
 const AdminLayout = React.lazy(() => import('./pages/admin/AdminLayout'));
 const DashboardHome = React.lazy(() => import('./pages/admin/DashboardHome'));
-const EventPackageManagement = React.lazy(() => import('./pages/admin/HallManagement'));
+const EventManagement = React.lazy(() => import('./pages/admin/EventManagement'));
 const RoomManagement = React.lazy(() => import('./pages/admin/RoomManagement'));
 const StaffManagement = React.lazy(() => import('./pages/admin/StaffManagement'));
 const FacilityManagement = React.lazy(() => import('./pages/admin/FacilityManagement'));
 const MenuManagement = React.lazy(() => import('./pages/admin/MenuManagement'));
 const ReviewManagement = React.lazy(() => import('./pages/admin/ReviewManagement'));
-const BookingManagement = React.lazy(() => import('./pages/admin/BookingManagement'));
+const RoomBookingManagement = React.lazy(() => import('./pages/admin/RoomBookingManagement'));
+const EventBookingManagement = React.lazy(() => import('./pages/admin/EventBookingManagement'));
+const FacilityBookingManagement = React.lazy(() => import('./pages/admin/FacilityBookingManagement'));
+const FaqManagement = React.lazy(() => import('./pages/admin/FaqManagement'));
+const Faq = React.lazy(() => import('./pages/Faq'));
 const BookingPage = React.lazy(() => import('./pages/BookingPage'));
 const PaymentPage = React.lazy(() => import('./pages/PaymentPage'));
 
@@ -49,15 +54,20 @@ const App = () => {
               <Route path='/event-packages' element={<Halls />} />
               <Route path='/admin' element={<AdminLayout />}>
                 <Route index element={<DashboardHome />} />
-                <Route path='bookings' element={<BookingManagement />} />
-                <Route path='event-packages' element={<EventPackageManagement />} />
+                <Route path='room-bookings' element={<RoomBookingManagement />} />
+                <Route path='hall-bookings' element={<EventBookingManagement />} />
+                <Route path='facility-bookings' element={<FacilityBookingManagement />} />
+                <Route path='event-packages' element={<EventManagement />} />
                 <Route path='rooms' element={<RoomManagement />} />
                 <Route path='staff' element={<StaffManagement />} />
                 <Route path='facilities' element={<FacilityManagement />} />
                 <Route path='menu' element={<MenuManagement />} />
+                <Route path='faqs' element={<FaqManagement />} />
                 <Route path='reviews' element={<ReviewManagement />} />
               </Route>
+              <Route path='/faq' element={<Faq />} />
               <Route path='/rooms' element={<Rooms />} />
+              <Route path='/facilities' element={<Facilities />} />
               <Route path='/book/:roomId' element={<BookingPage />} />
               <Route path='/contact' element={<Contact />} />
               <Route path='/reviews' element={<Reviews />} />

@@ -34,11 +34,11 @@ const getMenuItemById = async (req, res) => {
 
 // Create a new menu item
 const createMenuItem = async (req, res) => {
-    const { name, description, price, category, is_available, image_url, is_featured } = req.body;
+    const { name, description, category, is_available, image_url, is_featured } = req.body;
     try {
         const { data, error } = await supabase
             .from('menu')
-            .insert([{ name, description, price, category, is_available, image_url, is_featured }])
+            .insert([{ name, description, category, is_available, image_url, is_featured }])
             .select();
 
         if (error) throw error;

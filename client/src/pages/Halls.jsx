@@ -101,18 +101,11 @@ const Halls = () => {
             }
 
             // --- AVAILABILITY CHECK ---
-            const { data: existingBookings, error: checkError } = await supabase
-                .from('hall_bookings')
-                .select('id')
-                .eq('hall_id', selectedHall.id)
-                .eq('booking_date', bookingData.date)
-                .eq('session_type', bookingData.session_type)
-                .neq('status', 'Cancelled');
+            const availRes = await fetch(`http://localhost:5000/api/event-bookings/check-availability?hall_id=${selectedHall.id}&booking_date=${bookingData.date}&session_type=${bookingData.session_type}`);
+            const availData = await availRes.json();
 
-            if (checkError) throw checkError;
-
-            if (existingBookings && existingBookings.length > 0) {
-                alert(`Sorry, this hall is already booked for ${bookingData.date} (${bookingData.session_type}). Please choose another date or session.`);
+            if (!availRes.ok || !availData.available) {
+                alert(availData.error || `Sorry, this hall is already booked for ${bookingData.date} (${bookingData.session_type}). Please choose another date or session.`);
                 setSubmitting(false);
                 return;
             }

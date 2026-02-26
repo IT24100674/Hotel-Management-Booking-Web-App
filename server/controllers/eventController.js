@@ -78,13 +78,22 @@ const updateEvent = async (req, res) => {
 const deleteEvent = async (req, res) => {
     const { id } = req.params;
     try {
+        // 1. Delete associated bookings first
+        const { error: bookingError } = await supabase
+            .from('event_bookings')
+            .delete()
+            .eq('hall_id', id);
+
+        if (bookingError) throw bookingError;
+
+        // 2. Delete the event package
         const { error } = await supabase
             .from('events')
             .delete()
             .eq('id', id);
 
         if (error) throw error;
-        res.status(200).json({ message: 'Event deleted successfully' });
+        res.status(200).json({ message: 'Event and associated bookings deleted successfully' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

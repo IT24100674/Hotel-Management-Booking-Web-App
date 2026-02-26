@@ -80,7 +80,7 @@ const BookingPage = () => {
 
         try {
             // Check availability
-            const res = await fetch(`http://localhost:5000/api/bookings/check-availability?room_id=${roomId}&check_in=${checkIn}&check_out=${checkOut}`);
+            const res = await fetch(`http://localhost:5000/api/room-bookings/check-availability?room_id=${roomId}&check_in=${checkIn}&check_out=${checkOut}`);
 
             if (!res.ok) {
                 const errData = await res.json();

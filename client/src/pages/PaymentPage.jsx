@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import { CreditCard, Lock, Calendar, CheckCircle, AlertCircle, Loader } from 'lucide-react';
+import { CreditCard, Lock, Calendar, CheckCircle, AlertCircle, Loader, Clock, Users } from 'lucide-react';
 
 const PaymentPage = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const { bookingDetails, room, hall, type } = location.state || {}; // Expecting details from BookingPage or Halls
+    const { bookingDetails, room, hall, facility, type } = location.state || {}; // Expecting details from BookingPage, Halls, or Facilities
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
+    const [savedTransactionId, setSavedTransactionId] = useState('');
 
     // Mock Form State
     const [cardNumber, setCardNumber] = useState('');
@@ -19,10 +20,10 @@ const PaymentPage = () => {
     const [nameOnCard, setNameOnCard] = useState('');
 
     useEffect(() => {
-        if (!bookingDetails || (!room && !hall)) {
+        if (!bookingDetails || (!room && !hall && !facility)) {
             navigate('/'); // Redirect if accessed directly without state
         }
-    }, [bookingDetails, room, hall, navigate]);
+    }, [bookingDetails, room, hall, facility, navigate]);
 
     const handlePayment = async (e) => {
         e.preventDefault();
@@ -32,22 +33,11 @@ const PaymentPage = () => {
         // Simulate payment processing delay
         setTimeout(async () => {
             try {
-                // 1. "Process Payment" (Mock success)
+                let bookingResponse;
+                const transactionId = Math.random().toString(36).substr(2, 9).toUpperCase();
 
                 if (type === 'hall') {
-                    // Create Hall Booking
-                    const { error: bookingError } = await supabase
-                        .from('hall_bookings')
-                        .insert([{
-                            ...bookingDetails,
-                            status: 'Confirmed' // Paid and Confirmed
-                        }]);
-
-                    if (bookingError) throw bookingError;
-
-                } else {
-                    // Create Room Booking
-                    const res = await fetch('http://localhost:5000/api/bookings', {
+                    const res = await fetch('http://localhost:5000/api/event-bookings', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -55,13 +45,66 @@ const PaymentPage = () => {
                             status: 'Confirmed'
                         })
                     });
+                    if (!res.ok) {
+                        const errData = await res.json();
+                        throw new Error(errData.error || 'Event booking failed after payment');
+                    }
+                    bookingResponse = await res.json();
+                } else if (type === 'facility') {
+                    // Double check availability
+                    const availRes = await fetch(`http://localhost:5000/api/facility-bookings/check-availability?facility_id=${facility.id}&booking_date=${bookingDetails.booking_date}&start_time=${bookingDetails.start_time}&guest_count=${bookingDetails.guest_count}`);
+                    const availData = await availRes.json();
+                    if (!availRes.ok) throw new Error(availData.message || 'Facility no longer available');
 
+                    const res = await fetch('http://localhost:5000/api/facility-bookings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            ...bookingDetails,
+                            status: 'Confirmed'
+                        })
+                    });
+                    if (!res.ok) {
+                        const errData = await res.json();
+                        throw new Error(errData.error || 'Facility booking failed after payment');
+                    }
+                    bookingResponse = await res.json();
+                } else {
+                    const res = await fetch('http://localhost:5000/api/room-bookings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            ...bookingDetails,
+                            status: 'Confirmed'
+                        })
+                    });
                     if (!res.ok) {
                         const errData = await res.json();
                         throw new Error(errData.error || 'Booking creation failed after payment');
                     }
+                    bookingResponse = await res.json();
                 }
 
+                // 2. Record Payment in the Table
+                const paymentRes = await fetch('http://localhost:5000/api/payments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: bookingDetails.user_id || bookingDetails.userId,
+                        room_booking_id: type === 'room' || !type ? bookingResponse.id : null,
+                        event_booking_id: type === 'hall' ? bookingResponse.id : null,
+                        facility_booking_id: type === 'facility' ? bookingResponse.id : null,
+                        amount: bookingDetails.total_price,
+                        payment_method: 'Card',
+                        transaction_id: transactionId
+                    })
+                });
+
+                if (!paymentRes.ok) {
+                    console.error('Payment record failed, but booking was created');
+                }
+
+                setSavedTransactionId(transactionId);
                 setSuccess(true);
                 // Redirect after short delay
                 setTimeout(() => {
@@ -75,7 +118,7 @@ const PaymentPage = () => {
         }, 2000); // 2 second mock delay
     };
 
-    if (!bookingDetails || (!room && !hall)) return null;
+    if (!bookingDetails || (!room && !hall && !facility)) return null;
 
     if (success) return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
@@ -85,10 +128,10 @@ const PaymentPage = () => {
                 </div>
                 <h2 className="text-3xl font-playfair font-bold text-gray-900 mb-2">Payment Successful!</h2>
                 <p className="text-gray-600 mb-6">
-                    Your booking for <strong>{type === 'hall' ? hall.title : `Room ${room.room_number}`}</strong> is confirmed.
+                    Your booking for <strong>{type === 'hall' ? hall.title : type === 'facility' ? facility.name : `Room ${room.room_number}`}</strong> is confirmed.
                 </p>
                 <div className="bg-gray-50 p-4 rounded-xl mb-6 text-sm text-gray-500">
-                    <p>Transaction ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}</p>
+                    <p>Transaction ID: {savedTransactionId}</p>
                     <p>Amount Paid: <strong>${bookingDetails.total_price}</strong></p>
                 </div>
                 <p className="text-sm text-amber-600 animate-pulse">Redirecting to your bookings...</p>
@@ -105,10 +148,10 @@ const PaymentPage = () => {
                     <h2 className="text-2xl font-playfair font-bold text-gray-900">Order Summary</h2>
                     <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
                         <div className="h-48 relative">
-                            <img src={type === 'hall' ? hall.image_url : room.image_url} alt="Item" className="w-full h-full object-cover" />
+                            <img src={type === 'hall' ? hall.image_url : type === 'facility' ? facility.image_url : room.image_url} alt="Item" className="w-full h-full object-cover" />
                             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                                <h3 className="text-white font-bold text-xl">{type === 'hall' ? hall.title : `Room ${room.room_number}`}</h3>
-                                <p className="text-gray-200 text-sm">{type === 'hall' ? 'Function Hall' : `${room.type} Suite`}</p>
+                                <h3 className="text-white font-bold text-xl">{type === 'hall' ? hall.title : type === 'facility' ? facility.name : `Room ${room.room_number}`}</h3>
+                                <p className="text-gray-200 text-sm">{type === 'hall' ? 'Function Hall' : type === 'facility' ? 'Hotel Facility' : `${room.type} Suite`}</p>
                             </div>
                         </div>
                         <div className="p-6 space-y-4">
@@ -127,6 +170,30 @@ const PaymentPage = () => {
                                             <span>Session</span>
                                         </div>
                                         <span className="font-medium text-gray-900">{bookingDetails.session_type}</span>
+                                    </div>
+                                </>
+                            ) : type === 'facility' ? (
+                                <>
+                                    <div className="flex justify-between items-center text-sm text-gray-600">
+                                        <div className="flex items-center gap-2">
+                                            <Calendar size={16} />
+                                            <span>Date</span>
+                                        </div>
+                                        <span className="font-medium text-gray-900">{bookingDetails.booking_date}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-sm text-gray-600">
+                                        <div className="flex items-center gap-2">
+                                            <Clock size={16} />
+                                            <span>Time</span>
+                                        </div>
+                                        <span className="font-medium text-gray-900">{bookingDetails.start_time}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-sm text-gray-600">
+                                        <div className="flex items-center gap-2">
+                                            <Users size={16} />
+                                            <span>Guests</span>
+                                        </div>
+                                        <span className="font-medium text-gray-900">{bookingDetails.guest_count}</span>
                                     </div>
                                 </>
                             ) : (

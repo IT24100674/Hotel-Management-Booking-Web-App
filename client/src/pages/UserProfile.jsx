@@ -64,46 +64,43 @@ const UserProfile = () => {
     const fetchBookings = async (userId) => {
         setLoadingBookings(true);
         try {
-            // 1. Fetch Room Bookings using existing API
-            const roomRes = await fetch(`http://localhost:5000/api/bookings/user/${userId}`);
+            // 1. Fetch Room Bookings
+            const roomRes = await fetch(`http://localhost:5000/api/room-bookings/user/${userId}`);
             let roomData = [];
-            if (roomRes.ok) {
-                roomData = await roomRes.json();
+            if (roomRes.ok) roomData = await roomRes.json();
+
+            // 2. Fetch Event Bookings via API
+            const hallRes = await fetch(`http://localhost:5000/api/event-bookings/user/${userId}`);
+            let hallData = [];
+            if (hallRes.ok) hallData = await hallRes.json();
+
+            // 3. Fetch Facility Bookings
+            const facilityRes = await fetch(`http://localhost:5000/api/facility-bookings/user/${userId}`);
+            let facilityData = [];
+            if (facilityRes.ok) {
+                facilityData = await facilityRes.json();
             }
 
-            // 2. Fetch Hall Bookings using Supabase
-            const { data: hallData, error: hallError } = await supabase
-                .from('hall_bookings')
-                .select(`
-                    *,
-                    events (
-                        title,
-                        image_url
-                    )
-                `)
-                .eq('user_id', userId)
-                .order('booking_date', { ascending: false });
+            // 4. Normalize and Merge
+            const normalizedRooms = roomData.map(b => ({ ...b, type: 'room', sortDate: new Date(b.created_at) }));
+            const normalizedHalls = (hallData || []).map(b => ({ ...b, type: 'hall', sortDate: new Date(b.created_at) }));
+            const normalizedFacilities = (facilityData || []).map(b => ({ ...b, type: 'facility', sortDate: new Date(b.created_at) }));
 
-            if (hallError) throw hallError;
-
-            // 3. Normalize and Merge
-            const normalizedRooms = roomData.map(b => ({ ...b, type: 'room', sortDate: new Date(b.check_in) }));
-            const normalizedHalls = (hallData || []).map(b => ({ ...b, type: 'hall', sortDate: new Date(b.booking_date) }));
-
-            const allBookings = [...normalizedRooms, ...normalizedHalls].sort((a, b) => b.sortDate - a.sortDate);
+            const allBookings = [...normalizedRooms, ...normalizedHalls, ...normalizedFacilities].sort((a, b) => b.sortDate - a.sortDate);
 
             setBookings(allBookings);
 
             // Also fetch reviews to see which bookings are already reviewed
             const { data: reviewsData } = await supabase
                 .from('reviews')
-                .select('booking_id, hall_booking_id')
-                .or(`booking_id.not.is.null, hall_booking_id.not.is.null`);
+                .select('booking_id, hall_booking_id, facility_booking_id')
+                .or(`booking_id.not.is.null, hall_booking_id.not.is.null, facility_booking_id.not.is.null`);
 
             const reviewedIds = new Set();
             reviewsData?.forEach(r => {
                 if (r.booking_id) reviewedIds.add(r.booking_id);
                 if (r.hall_booking_id) reviewedIds.add(r.hall_booking_id);
+                if (r.facility_booking_id) reviewedIds.add(r.facility_booking_id);
             });
             setReviewedBookingIds(reviewedIds);
 
@@ -152,40 +149,31 @@ const UserProfile = () => {
 
         try {
             if (type === 'hall') {
-                // 1. Fetch booking to check date
-                const { data: booking, error: fetchError } = await supabase
-                    .from('hall_bookings')
-                    .select('*')
-                    .eq('id', bookingId)
-                    .single();
-
-                if (fetchError) throw fetchError;
-
-                // 2. Check time constraint (10 days = 240h before booking_date)
-                const bookingDate = new Date(booking.booking_date);
-                const now = new Date();
-                const diffMs = bookingDate - now;
-                const diffHours = diffMs / (1000 * 60 * 60);
-
-                if (diffHours < 240) {
-                    throw new Error('Event Package cancellation is only allowed up to 10 days before the event.');
-                }
-
-                // 3. Update status
-                const { error } = await supabase
-                    .from('hall_bookings')
-                    .update({ status: 'Cancelled' })
-                    .eq('id', bookingId);
-
-                if (error) throw error;
-            } else {
-                const res = await fetch(`http://localhost:5000/api/bookings/cancel/${bookingId}`, {
+                const res = await fetch(`http://localhost:5000/api/event-bookings/cancel/${bookingId}`, {
                     method: 'PUT'
                 });
 
                 if (!res.ok) {
                     const data = await res.json();
-                    throw new Error(data.error || 'Failed to cancel booking');
+                    throw new Error(data.error || 'Failed to cancel event booking');
+                }
+            } else if (type === 'facility') {
+                const res = await fetch(`http://localhost:5000/api/facility-bookings/${bookingId}`, {
+                    method: 'DELETE'
+                });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    throw new Error(data.error || 'Failed to cancel facility booking');
+                }
+            } else {
+                const res = await fetch(`http://localhost:5000/api/room-bookings/cancel/${bookingId}`, {
+                    method: 'PUT'
+                });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    throw new Error(data.error || 'Failed to cancel room booking');
                 }
             }
 
@@ -216,8 +204,10 @@ const UserProfile = () => {
                 status: 'Pending', // Reviews need approval
                 event_id: selectedBookingForReview.type === 'hall' ? selectedBookingForReview.hall_id : null,
                 room_id: selectedBookingForReview.type === 'room' ? selectedBookingForReview.room_id : null,
+                facility_id: selectedBookingForReview.type === 'facility' ? selectedBookingForReview.facility_id : null,
                 booking_id: selectedBookingForReview.type === 'room' ? selectedBookingForReview.id : null,
-                hall_booking_id: selectedBookingForReview.type === 'hall' ? selectedBookingForReview.id : null
+                hall_booking_id: selectedBookingForReview.type === 'hall' ? selectedBookingForReview.id : null,
+                facility_booking_id: selectedBookingForReview.type === 'facility' ? selectedBookingForReview.id : null
             };
 
             const response = await fetch('http://localhost:5000/api/reviews', {
@@ -409,6 +399,7 @@ const UserProfile = () => {
                                         <ul className="list-disc ml-4 mt-1">
                                             <li><strong>Rooms:</strong> Up to 48 hours before check-in.</li>
                                             <li><strong>Event Packages:</strong> Up to 10 days before the event date.</li>
+                                            <li><strong>Other Facilities:</strong> Up to 24 hours before the booking time.</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -425,6 +416,8 @@ const UserProfile = () => {
                                                 <div className="w-full md:w-48 h-32 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
                                                     {booking.type === 'hall' ? (
                                                         booking.events?.image_url && <img src={booking.events.image_url} alt="Hall" className="w-full h-full object-cover" />
+                                                    ) : booking.type === 'facility' ? (
+                                                        booking.facilities?.image_url && <img src={booking.facilities.image_url} alt="Facility" className="w-full h-full object-cover" />
                                                     ) : (
                                                         booking.rooms?.image_url && <img src={booking.rooms.image_url} alt="Room" className="w-full h-full object-cover" />
                                                     )}
@@ -436,7 +429,9 @@ const UserProfile = () => {
                                                         <h3 className="font-bold text-lg text-gray-900">
                                                             {booking.type === 'hall'
                                                                 ? `${booking.events?.title || 'Function Hall'}`
-                                                                : `Room ${booking.rooms?.room_number} - ${booking.rooms?.type}`
+                                                                : booking.type === 'facility'
+                                                                    ? `${booking.facilities?.name || 'Facility'}`
+                                                                    : `Room ${booking.rooms?.room_number} - ${booking.rooms?.type}`
                                                             }
                                                         </h3>
                                                         <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${booking.status === 'Confirmed' ? 'bg-green-100 text-green-700' :
@@ -457,6 +452,17 @@ const UserProfile = () => {
                                                                 <div>
                                                                     <p className="text-gray-400 text-xs uppercase tracking-wider">Session</p>
                                                                     <p className="font-medium text-gray-900">{booking.session_type}</p>
+                                                                </div>
+                                                            </>
+                                                        ) : booking.type === 'facility' ? (
+                                                            <>
+                                                                <div>
+                                                                    <p className="text-gray-400 text-xs uppercase tracking-wider">Booking Date</p>
+                                                                    <p className="font-medium text-gray-900">{new Date(booking.booking_date).toLocaleDateString()}</p>
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-gray-400 text-xs uppercase tracking-wider">Time & Duration</p>
+                                                                    <p className="font-medium text-gray-900">{booking.start_time?.substring(0, 5)} ({booking.duration_hours}h)</p>
                                                                 </div>
                                                             </>
                                                         ) : (
@@ -487,6 +493,19 @@ const UserProfile = () => {
                                                                     </button>
                                                                 ) : (
                                                                     <span className="text-xs text-gray-400 italic" title="Less than 10 days before event">
+                                                                        Cancellation unavailable
+                                                                    </span>
+                                                                )
+                                                            ) : booking.type === 'facility' ? (
+                                                                (new Date(`${booking.booking_date}T${booking.start_time}`) - new Date() > 24 * 60 * 60 * 1000) ? (
+                                                                    <button
+                                                                        onClick={() => handleCancelBooking(booking.id, booking.type)}
+                                                                        className="text-sm text-red-600 hover:text-red-800 font-medium underline transition-colors"
+                                                                    >
+                                                                        Cancel Booking
+                                                                    </button>
+                                                                ) : (
+                                                                    <span className="text-xs text-gray-400 italic" title="Less than 24 hours before booking">
                                                                         Cancellation unavailable
                                                                     </span>
                                                                 )
@@ -530,6 +549,8 @@ const UserProfile = () => {
                                             <a href="/rooms" className="text-amber-600 font-medium hover:underline">Browse Rooms</a>
                                             <span className="text-gray-300">|</span>
                                             <a href="/event-packages" className="text-amber-600 font-medium hover:underline">Browse Event Packages</a>
+                                            <span className="text-gray-300">|</span>
+                                            <a href="/facilities" className="text-amber-600 font-medium hover:underline">Browse Facilities</a>
                                         </div>
                                     </div>
                                 )}

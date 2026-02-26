@@ -11,7 +11,6 @@ const MenuManagement = () => {
     const [formData, setFormData] = useState({
         name: '',
         description: '',
-        price: '',
         category: 'Main Course',
         is_available: true,
         image_url: '',
@@ -120,7 +119,6 @@ const MenuManagement = () => {
         setFormData({
             name: '',
             description: '',
-            price: '',
             category: 'Main Course',
             is_available: true,
             is_available: true,
@@ -136,7 +134,6 @@ const MenuManagement = () => {
         setFormData({
             name: item.name,
             description: item.description || '',
-            price: item.price,
             category: item.category,
             is_available: item.is_available,
             is_available: item.is_available,
@@ -214,10 +211,6 @@ const MenuManagement = () => {
                                     <h3 className="text-lg font-bold text-gray-900">{item.name}</h3>
                                     <span className="text-xs text-indigo-600 font-medium bg-indigo-50 px-2 py-0.5 rounded-full">{item.category}</span>
                                 </div>
-                                <div className="flex items-center text-lg font-semibold text-gray-900">
-                                    <DollarSign size={16} className="text-gray-400" />
-                                    {item.price}
-                                </div>
                             </div>
                             <p className="text-gray-600 text-sm line-clamp-2">{item.description}</p>
                         </div>
@@ -237,17 +230,7 @@ const MenuManagement = () => {
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
-                            <input
-                                type="number"
-                                required
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                                value={formData.price}
-                                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                            />
-                        </div>
+                    <div className="grid grid-cols-1 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                             <select

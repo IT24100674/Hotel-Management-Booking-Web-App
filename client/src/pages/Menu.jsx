@@ -124,9 +124,6 @@ const Menu = () => {
                     <h3 className="text-xl font-playfair font-bold text-gray-900 truncate pr-2 group-hover:text-amber-600 transition-colors">
                       {item.name}
                     </h3>
-                    <span className="text-lg font-bold text-amber-600 whitespace-nowrap">
-                      {item.price}
-                    </span>
                   </div>
 
                   <p className="text-gray-500 text-sm mb-3 line-clamp-2">

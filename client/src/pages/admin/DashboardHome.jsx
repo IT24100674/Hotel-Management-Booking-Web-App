@@ -36,48 +36,32 @@ const DashboardHome = () => {
 
     const fetchDashboardData = async () => {
         try {
-            // Fetch Room Bookings and Stats first
-            const [transactionsRes, statsRes] = await Promise.all([
-                fetch('http://localhost:5000/api/bookings'),
-                fetch('http://localhost:5000/api/bookings/stats')
+            // Fetch All Booking Types and Stats
+            const [roomBookingsRes, statsRes, eventBookingsRes, facilityBookingsRes] = await Promise.all([
+                fetch('http://localhost:5000/api/room-bookings'),
+                fetch('http://localhost:5000/api/room-bookings/stats'),
+                fetch('http://localhost:5000/api/event-bookings'),
+                fetch('http://localhost:5000/api/facility-bookings')
             ]);
 
-            // Fetch Hall Bookings separately to avoid crashing if it fails
-            let hallBookings = [];
-            try {
-                const { data, error } = await supabase
-                    .from('hall_bookings')
-                    .select('*, events(title, type)')
-                    .order('booking_date', { ascending: false });
-
-                if (error) {
-                    console.error("Error fetching hall bookings:", error);
-                } else {
-                    hallBookings = data || [];
-                }
-            } catch (hallErr) {
-                console.error("Supabase fetch error:", hallErr);
-            }
-
-            let mergedTransactions = [];
             let roomBookings = [];
             let roomStats = { totalIncome: 0, monthlyIncome: 0, monthlyChange: 0 };
+            let eventBookings = [];
+            let facilityBookings = [];
 
-            if (transactionsRes.ok) {
-                roomBookings = await transactionsRes.json();
-            }
-            if (statsRes.ok) {
-                roomStats = await statsRes.json();
-            }
+            if (roomBookingsRes.ok) roomBookings = await roomBookingsRes.json();
+            if (statsRes.ok) roomStats = await statsRes.json();
+            if (eventBookingsRes.ok) eventBookings = await eventBookingsRes.json();
+            if (facilityBookingsRes.ok) facilityBookings = await facilityBookingsRes.json();
 
-            // Update State for Stats
+            // Update State for Stats (now represents aggregate)
             setStatsData({
                 totalIncome: Number(roomStats.totalIncome),
                 monthlyIncome: Number(roomStats.monthlyIncome),
                 monthlyChange: roomStats.monthlyChange
             });
 
-            // Merge Transactions
+            // Normalize Room Transactions
             const normalizedRooms = (Array.isArray(roomBookings) ? roomBookings : []).map(b => ({
                 ...b,
                 type: 'room',
@@ -85,14 +69,24 @@ const DashboardHome = () => {
                 sortDate: new Date(b.created_at)
             }));
 
-            const normalizedHalls = hallBookings.map(b => ({
+            // Normalize Event Transactions
+            const normalizedEvents = (Array.isArray(eventBookings) ? eventBookings : []).map(b => ({
                 ...b,
-                type: 'hall',
-                serviceName: b.events?.title || 'Event',
+                type: 'event',
+                serviceName: b.events?.title || 'Event Package',
                 sortDate: new Date(b.created_at)
             }));
 
-            mergedTransactions = [...normalizedRooms, ...normalizedHalls]
+            // Normalize Facility Transactions
+            const normalizedFacilities = (Array.isArray(facilityBookings) ? facilityBookings : []).map(b => ({
+                ...b,
+                type: 'facility',
+                serviceName: b.facilities?.name || 'Facility Service',
+                sortDate: new Date(b.created_at)
+            }));
+
+            // Merge and Sort All
+            const mergedTransactions = [...normalizedRooms, ...normalizedEvents, ...normalizedFacilities]
                 .sort((a, b) => b.sortDate - a.sortDate)
                 .slice(0, 10);
 
@@ -172,9 +166,13 @@ const DashboardHome = () => {
                                                     </div>
                                                 </td>
                                                 <td className="py-4 text-gray-600">
-                                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${item.type === 'room' ? 'bg-indigo-50 text-indigo-700' : 'bg-amber-50 text-amber-700'
+                                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${item.type === 'room' ? 'bg-indigo-50 text-indigo-700' :
+                                                            item.type === 'event' ? 'bg-amber-50 text-amber-700' :
+                                                                'bg-emerald-50 text-emerald-700'
                                                         }`}>
-                                                        {item.type === 'room' ? 'Room' : (item.events?.type || 'Event')}
+                                                        {item.type === 'room' ? 'Room' :
+                                                            item.type === 'event' ? (item.events?.type || 'Event') :
+                                                                'Facility'}
                                                     </span>
                                                 </td>
                                                 <td className="py-4 text-gray-600 font-medium">

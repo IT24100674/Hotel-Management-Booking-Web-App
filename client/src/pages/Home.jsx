@@ -10,6 +10,7 @@ import { Utensils } from 'lucide-react'
 const Home = () => {
   const navigate = useNavigate()
   const [menuItems, setMenuItems] = useState([])
+  const [faqs, setFaqs] = useState([])
 
   const facilities = [
     {
@@ -34,7 +35,21 @@ const Home = () => {
 
   useEffect(() => {
     fetchFeaturedMenu();
+    fetchFaqs();
   }, []);
+
+  const fetchFaqs = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/faqs');
+      const data = await res.json();
+      if (res.ok) {
+        // Show top 4 active FAQs on home page
+        setFaqs(data.filter(f => f.is_active).slice(0, 4));
+      }
+    } catch (err) {
+      console.error('Error fetching FAQs for home:', err);
+    }
+  };
 
   const fetchFeaturedMenu = async () => {
     try {
@@ -116,7 +131,7 @@ const Home = () => {
                       e.stopPropagation();
                       if (item.title === "Rooms") navigate('/rooms');
                       else if (item.title === "Events") navigate('/event-packages');
-                      else alert("Explore our gym, pool, and spa facilities upon arrival!");
+                      else navigate('/facilities');
                     }}
                     className="relative px-8 py-3 bg-white text-gray-950 text-xs font-black uppercase tracking-widest rounded-full overflow-hidden group/btn transition-all duration-300 transform translate-y-8 group-hover:translate-y-0 shadow-xl opacity-0 group-hover:opacity-100"
                   >
@@ -237,8 +252,48 @@ const Home = () => {
         </div>
       </section >
 
+      {/* FAQ Preview Section */}
+      <section className="section-padding bg-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
+        <div className="container-custom relative z-10">
+          <div className="text-center mb-16">
+            <span className="text-secondary font-bold tracking-widest uppercase text-xs mb-4 block">Quick Help</span>
+            <h2 className="font-playfair text-4xl md:text-5xl font-bold text-gray-900 mb-6">Common Questions</h2>
+            <div className="w-20 h-1 bg-secondary mx-auto"></div>
+          </div>
+
+          <div className="max-w-4xl mx-auto space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {faqs.length > 0 ? faqs.map((faq) => (
+                <div key={faq.id} className="bg-gray-50 p-8 rounded-3xl border border-gray-100 hover:border-secondary/30 transition-all group">
+                  <h3 className="font-bold text-lg text-gray-900 mb-3 group-hover:text-secondary transition-colors line-clamp-2">{faq.question}</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">{faq.answer}</p>
+                </div>
+              )) : (
+                <>
+                  <div className="bg-gray-50 p-8 rounded-3xl border border-gray-100 animate-pulse h-40"></div>
+                  <div className="bg-gray-50 p-8 rounded-3xl border border-gray-100 animate-pulse h-40"></div>
+                  <div className="bg-gray-50 p-8 rounded-3xl border border-gray-100 animate-pulse h-40"></div>
+                  <div className="bg-gray-50 p-8 rounded-3xl border border-gray-100 animate-pulse h-40"></div>
+                </>
+              )}
+            </div>
+
+            <div className="text-center mt-12">
+              <button
+                onClick={() => navigate('/faq')}
+                className="inline-flex items-center gap-2 text-secondary font-black text-sm uppercase tracking-widest hover:gap-4 transition-all"
+              >
+                View Full Help Center
+                <span className="text-xl">→</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Testimonials Section */}
-      < Testimonials />
+      <Testimonials />
     </>
   )
 }
