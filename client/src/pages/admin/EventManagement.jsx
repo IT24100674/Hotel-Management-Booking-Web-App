@@ -192,14 +192,14 @@ const EventManagement = () => {
                         <div className="p-5">
                             <span className="text-lg font-bold text-indigo-600">${event.price_per_guest} <span className="text-xs text-gray-400 font-normal">/ guest</span></span>
                             <div className="mt-2 space-y-2 text-sm text-gray-600">
-                                {hall.features && (
+                                {event.features && (
                                     <div className="flex items-start gap-2">
                                         <List size={16} className="text-gray-400 mt-0.5" />
-                                        <p className="line-clamp-1">{hall.features}</p>
+                                        <p className="line-clamp-1">{event.features}</p>
                                     </div>
                                 )}
                             </div>
-                            <p className="mt-3 text-gray-600 text-sm line-clamp-2">{hall.description}</p>
+                            <p className="mt-3 text-gray-600 text-sm line-clamp-2">{event.description}</p>
                         </div>
                     </div>
                 ))}

@@ -93,13 +93,13 @@ const UserProfile = () => {
             // Also fetch reviews to see which bookings are already reviewed
             const { data: reviewsData } = await supabase
                 .from('reviews')
-                .select('booking_id, hall_booking_id, facility_booking_id')
-                .or(`booking_id.not.is.null, hall_booking_id.not.is.null, facility_booking_id.not.is.null`);
+                .select('room_booking_id, event_booking_id, facility_booking_id')
+                .or(`room_booking_id.not.is.null, event_booking_id.not.is.null, facility_booking_id.not.is.null`);
 
             const reviewedIds = new Set();
             reviewsData?.forEach(r => {
-                if (r.booking_id) reviewedIds.add(r.booking_id);
-                if (r.hall_booking_id) reviewedIds.add(r.hall_booking_id);
+                if (r.room_booking_id) reviewedIds.add(r.room_booking_id);
+                if (r.event_booking_id) reviewedIds.add(r.event_booking_id);
                 if (r.facility_booking_id) reviewedIds.add(r.facility_booking_id);
             });
             setReviewedBookingIds(reviewedIds);
@@ -205,8 +205,8 @@ const UserProfile = () => {
                 event_id: selectedBookingForReview.type === 'hall' ? selectedBookingForReview.hall_id : null,
                 room_id: selectedBookingForReview.type === 'room' ? selectedBookingForReview.room_id : null,
                 facility_id: selectedBookingForReview.type === 'facility' ? selectedBookingForReview.facility_id : null,
-                booking_id: selectedBookingForReview.type === 'room' ? selectedBookingForReview.id : null,
-                hall_booking_id: selectedBookingForReview.type === 'hall' ? selectedBookingForReview.id : null,
+                room_booking_id: selectedBookingForReview.type === 'room' ? selectedBookingForReview.id : null,
+                event_booking_id: selectedBookingForReview.type === 'hall' ? selectedBookingForReview.id : null,
                 facility_booking_id: selectedBookingForReview.type === 'facility' ? selectedBookingForReview.id : null
             };
 

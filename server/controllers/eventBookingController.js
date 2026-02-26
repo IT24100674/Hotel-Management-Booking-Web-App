@@ -14,6 +14,7 @@ const getAllEventBookings = async (req, res) => {
         if (error) throw error;
         res.status(200).json(data);
     } catch (error) {
+        console.error('DATABASE ERROR (Bookings):', error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -103,6 +104,7 @@ const createEventBooking = async (req, res) => {
 
         res.status(201).json(newBooking);
     } catch (error) {
+        console.error('DATABASE ERROR (Bookings):', error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -123,6 +125,7 @@ const getUserEventBookings = async (req, res) => {
         if (error) throw error;
         res.status(200).json(data);
     } catch (error) {
+        console.error('DATABASE ERROR (Bookings):', error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -148,6 +151,7 @@ const deleteEventBooking = async (req, res) => {
         if (error) throw error;
         res.status(200).json({ message: 'Event booking cancelled successfully', data: data[0] });
     } catch (error) {
+        console.error('DATABASE ERROR (Bookings):', error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -188,6 +192,7 @@ const cancelEventBooking = async (req, res) => {
         if (error) throw error;
         res.status(200).json(data[0]);
     } catch (error) {
+        console.error('DATABASE ERROR (Bookings):', error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -212,6 +217,7 @@ const checkEventAvailability = async (req, res) => {
         if (error) throw error;
         res.status(200).json({ available: existing.length === 0 });
     } catch (error) {
+        console.error('DATABASE ERROR (Bookings):', error);
         res.status(500).json({ error: error.message });
     }
 };

@@ -11,6 +11,7 @@ const getEvents = async (req, res) => {
         if (error) throw error;
         res.status(200).json(data);
     } catch (error) {
+        console.error('DATABASE ERROR:', error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -28,6 +29,7 @@ const getEventById = async (req, res) => {
         if (error) throw error;
         res.status(200).json(data);
     } catch (error) {
+        console.error('DATABASE ERROR:', error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -52,6 +54,7 @@ const createEvent = async (req, res) => {
         if (error) throw error;
         res.status(201).json(data[0]);
     } catch (error) {
+        console.error('DATABASE ERROR:', error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -70,6 +73,7 @@ const updateEvent = async (req, res) => {
         if (error) throw error;
         res.status(200).json(data[0]);
     } catch (error) {
+        console.error('DATABASE ERROR:', error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -95,6 +99,7 @@ const deleteEvent = async (req, res) => {
         if (error) throw error;
         res.status(200).json({ message: 'Event and associated bookings deleted successfully' });
     } catch (error) {
+        console.error('DATABASE ERROR:', error);
         res.status(500).json({ error: error.message });
     }
 };
