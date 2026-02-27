@@ -419,6 +419,7 @@ const FacilityBookingManagement = () => {
                                 min="1"
                                 value={formData.duration_hours}
                                 onChange={e => setFormData({ ...formData, duration_hours: parseInt(e.target.value) })}
+                                onWheel={(e) => e.target.blur()}
                                 className="w-full px-4 py-2 border border-gray-100 rounded-xl bg-gray-50 outline-none"
                             />
                         </div>
@@ -430,6 +431,7 @@ const FacilityBookingManagement = () => {
                                 min="1"
                                 value={formData.guest_count}
                                 onChange={e => setFormData({ ...formData, guest_count: parseInt(e.target.value) })}
+                                onWheel={(e) => e.target.blur()}
                                 className="w-full px-4 py-2 border border-gray-100 rounded-xl bg-gray-50 outline-none"
                             />
                         </div>

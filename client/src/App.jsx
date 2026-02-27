@@ -12,7 +12,7 @@ import DebugBanner from './componets/DebugBanner'
 import ErrorBoundary from './componets/ErrorBoundary'
 import Rooms from './pages/Rooms'
 import Menu from './pages/Menu'
-import Halls from './pages/Halls'
+import Event from './pages/event'
 import Contact from './pages/Contact'
 import Reviews from './pages/Reviews'
 import Facilities from './pages/Facilities'
@@ -51,7 +51,7 @@ const App = () => {
             <Routes>
               <Route path='/' element={<Home />} />
               <Route path='/menu' element={<Menu />} />
-              <Route path='/event-packages' element={<Halls />} />
+              <Route path='/event-packages' element={<Event />} />
               <Route path='/admin' element={<AdminLayout />}>
                 <Route index element={<DashboardHome />} />
                 <Route path='room-bookings' element={<RoomBookingManagement />} />

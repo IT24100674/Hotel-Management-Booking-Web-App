@@ -190,6 +190,9 @@ const EventManagement = () => {
                             </div>
                         </div>
                         <div className="p-5">
+                            <h3 className="text-xl font-bold text-gray-900 mb-2 truncate" title={event.title}>
+                                {event.title}
+                            </h3>
                             <span className="text-lg font-bold text-indigo-600">${event.price_per_guest} <span className="text-xs text-gray-400 font-normal">/ guest</span></span>
                             <div className="mt-2 space-y-2 text-sm text-gray-600">
                                 {event.features && (
@@ -252,6 +255,7 @@ const EventManagement = () => {
                                     className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                                     value={formData.capacity}
                                     onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                                    onWheel={(e) => e.target.blur()}
                                 />
                             </div>
                         </div>
@@ -265,6 +269,7 @@ const EventManagement = () => {
                                     className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                                     value={formData.price_per_guest}
                                     onChange={(e) => setFormData({ ...formData, price_per_guest: e.target.value })}
+                                    onWheel={(e) => e.target.blur()}
                                 />
                             </div>
                         </div>

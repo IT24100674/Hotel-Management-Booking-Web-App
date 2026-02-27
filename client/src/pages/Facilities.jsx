@@ -358,6 +358,7 @@ const Facilities = () => {
                                 className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition-all font-medium text-gray-900"
                                 value={bookingData.duration_hours}
                                 onChange={(e) => setBookingData({ ...bookingData, duration_hours: parseInt(e.target.value) })}
+                                onWheel={(e) => e.target.blur()}
                             />
                         </div>
 
@@ -376,6 +377,7 @@ const Facilities = () => {
                                         const value = e.target.value === '' ? '' : parseInt(e.target.value);
                                         setBookingData({ ...bookingData, guest_count: value });
                                     }}
+                                    onWheel={(e) => e.target.blur()}
                                 />
                             </div>
                         </div>

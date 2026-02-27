@@ -152,105 +152,47 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Featured Menu Section */}
-      <section className="section-padding bg-gray-50/50 relative overflow-hidden">
-        {/* Decorative background elements */}
-        <div className="absolute top-1/2 left-0 w-[600px] h-[600px] bg-amber-50/20 rounded-full blur-[100px] -translate-y-1/2 -translate-x-1/2"></div>
+      {/* Menu Hero Call to Action */}
+      <section className="section-padding relative overflow-hidden bg-gray-950">
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1577219491135-ce391730fb2c?q=80&w=1977&auto=format&fit=crop"
+            alt="Chef preparing signature dining dish"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-gray-950/80 to-gray-950"></div>
+        </div>
 
-        <div className="container-custom relative z-10">
-          <div className="text-center mb-20">
-            <div className="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-[0.3em] text-amber-600 uppercase border-b-2 border-amber-600/20 bg-amber-50 rounded-t-lg">
-              Culinary Delights
+        <div className="container-custom relative z-10 pt-16">
+          <div className="text-center mb-12 max-w-4xl mx-auto flex flex-col items-center">
+            <div className="text-xs font-bold tracking-[0.4em] text-red-600 uppercase mb-8">
+              SIGNATURE DINING
             </div>
-            <h2 className="font-playfair text-5xl md:text-6xl font-black text-gray-900 mb-8 leading-tight">
-              Exquisite <span className="text-amber-600 italic">Dining</span>
+
+            <h2
+              className="font-playfair text-6xl md:text-7xl lg:text-[5.5rem] font-bold text-white mb-8 leading-[1.1] tracking-tight drop-shadow-md"
+              style={{ color: '#ffffff' }}
+            >
+              Artistry on<br />a Plate
             </h2>
-            <div className="w-24 h-1 bg-gradient-to-r from-transparent via-amber-600 to-transparent mx-auto mb-8"></div>
-            <p className="text-gray-500 max-w-2xl mx-auto text-lg font-medium leading-relaxed">
-              Savor the finest flavors prepared by our expert chefs using locally sourced ingredients, crafted to perfection for your palate.
+
+            <p
+              className="text-white/90 text-lg md:text-xl font-light leading-relaxed mb-12 max-w-2xl mx-auto drop-shadow"
+              style={{ color: '#f3f4f6' }}
+            >
+              Discover a symphony of seasonal flavors curated by our Michelin-starred culinary team.
             </p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            {menuItems.map((item) => (
-              <div key={item.id} className="group relative h-[500px] w-full cursor-pointer overflow-hidden rounded-[2.5rem] shadow-xl transition-all duration-700 hover:-translate-y-3 hover:shadow-2xl">
-                {/* Image Background with Ken Burns effect */}
-                <div className="absolute inset-0 scale-100 group-hover:scale-110 transition-transform duration-[2s] ease-out">
-                  {item.image_url ? (
-                    <img
-                      src={item.image_url}
-                      alt={item.name}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-full w-full bg-gray-100 flex items-center justify-center">
-                      <Utensils size={64} className="text-gray-300" />
-                    </div>
-                  )}
-                </div>
-
-                {/* sophisticated Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500"></div>
-
-                {/* Content Container */}
-                <div className="absolute inset-0 p-10 flex flex-col justify-end">
-                  <div className="mb-4 transform -translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
-                    <span className="inline-block px-4 py-1.5 text-[10px] font-black tracking-[0.2em] text-white uppercase border border-white/30 rounded-full bg-white/10 backdrop-blur-md">
-                      {item.category}
-                    </span>
-                  </div>
-
-                  <h3 className="font-playfair text-3xl font-black mb-3 text-white tracking-tight group-hover:text-amber-400 transition-colors duration-300">
-                    {item.name}
-                  </h3>
-
-                  <div className="w-12 h-0.5 bg-amber-500 mb-6 transition-all duration-500 group-hover:w-24"></div>
-
-                  <p className="text-sm leading-relaxed mb-8 line-clamp-2 text-gray-300 group-hover:text-white transition-colors duration-300 font-medium">
-                    {item.description || 'A masterpiece of flavors, carefully crafted to delight your senses.'}
-                  </p>
-
-                  <button
-                    onClick={() => navigate('/menu')}
-                    className="flex items-center gap-3 text-white text-xs font-black tracking-[0.2em] uppercase group/link"
-                  >
-                    <span className="relative">
-                      View Menu
-                      <span className="absolute -bottom-1 left-0 w-full h-px bg-white/20 group-hover/link:bg-white transition-colors"></span>
-                    </span>
-                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md group-hover/link:bg-amber-500 group-hover/link:text-gray-900 transition-all duration-300">
-                      <span className="text-lg leading-none transform group-hover/link:translate-x-0.5 transition-transform">→</span>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {menuItems.length === 0 && (
-            <div className="text-center py-24 bg-white rounded-[3rem] shadow-inner">
-              <div className="inline-block p-8 rounded-3xl bg-amber-50 text-amber-500 mb-6 animate-bounce">
-                <Utensils size={48} />
-              </div>
-              <h3 className="text-2xl font-playfair font-bold text-gray-900 mb-2">Chef is Preparing...</h3>
-              <p className="text-gray-400 font-medium">Our featured menu is being refreshed</p>
-            </div>
-          )}
-
-          <div className="text-center mt-20">
             <button
               onClick={() => navigate('/menu')}
-              className="group relative px-12 py-5 bg-gray-900 text-white text-sm font-black uppercase tracking-[0.2em] rounded-full overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-gray-950/20"
+              className="bg-[#da291c] hover:bg-red-700 text-white text-sm font-bold uppercase tracking-widest px-10 py-4 rounded-full transition-all duration-300 shadow-lg shadow-red-900/30 hover:-translate-y-1 hover:shadow-red-900/50"
             >
-              <span className="relative z-10 flex items-center gap-3">
-                Experience Full Menu
-                <span className="text-xl group-hover:translate-x-2 transition-transform">→</span>
-              </span>
-              <div className="absolute inset-0 bg-amber-600 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
+              VIEW OUR MENU
             </button>
           </div>
         </div>
-      </section >
+      </section>
+
 
       {/* FAQ Preview Section */}
       <section className="section-padding bg-white relative overflow-hidden">

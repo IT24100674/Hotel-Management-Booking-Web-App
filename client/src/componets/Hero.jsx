@@ -1,16 +1,26 @@
 import React from 'react'
-import heroImage from '../assets/hero.jpg'
+import bgVideo from '../assets/waves.mp4'
 import { useNavigate } from 'react-router-dom'
 
 
 const Hero = () => {
   const navigate = useNavigate()
   return (
-    <div
-      className='relative flex flex-col items-center justify-center text-white bg-no-repeat bg-cover bg-center h-screen'
-      style={{ backgroundImage: `url(${heroImage})` }}
-    >
-      <div className='absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60'></div>
+    <div className='relative flex flex-col items-center justify-center text-white h-screen overflow-hidden'>
+      {/* Video Background */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover z-0"
+      >
+        <source src={bgVideo} type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+
+      {/* Dark Overlay for Text Readability */}
+      <div className='absolute inset-0 z-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60'></div>
 
       <div className='relative z-10 text-center px-4 max-w-5xl mx-auto mt-16'>
         <h1 className='font-playfair text-5xl md:text-7xl lg:text-8xl font-bold mb-6 drop-shadow-lg leading-tight animate-[fadeIn_1s_ease-out]' style={{ color: '#c5a059' }}>

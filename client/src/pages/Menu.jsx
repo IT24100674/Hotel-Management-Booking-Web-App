@@ -63,16 +63,16 @@ const Menu = () => {
 
       <div className="max-w-7xl mx-auto px-4 py-12">
         {/* Controls */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-12">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-16">
           {/* Categories */}
-          <div className="flex flex-wrap justify-center gap-2">
+          <div className="flex flex-wrap justify-center gap-3">
             {categories.map(category => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`px-6 py-2 rounded-full text-sm font-semibold tracking-wide transition-all duration-300 ${selectedCategory === category
-                  ? 'bg-amber-500 text-white shadow-lg scale-105'
-                  : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                className={`px-7 py-2.5 rounded-full text-sm font-semibold tracking-wide transition-all duration-300 border ${selectedCategory === category
+                  ? 'bg-amber-500 text-white border-amber-500 shadow-[0_4px_15px_-3px_rgba(245,158,11,0.4)] scale-[1.03]'
+                  : 'bg-white text-gray-500 hover:text-gray-900 border-gray-200 hover:border-amber-300 hover:shadow-sm'
                   }`}
               >
                 {category}
@@ -81,70 +81,71 @@ const Menu = () => {
           </div>
 
           {/* Search */}
-          <div className="relative w-full md:w-auto">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <div className="relative w-full md:w-80 group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-amber-500 transition-colors" size={18} />
             <input
               type="text"
               placeholder="Search dishes..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full md:w-64 rounded-full border border-gray-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
+              className="pl-12 pr-6 py-3 w-full rounded-full border border-gray-200 bg-white shadow-sm focus:border-amber-400 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all duration-300 font-medium text-gray-700"
             />
           </div>
         </div>
 
         {/* Menu Grid */}
         {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
+          <div className="flex justify-center items-center py-32">
+            <div className="relative w-16 h-16">
+              <div className="absolute inset-0 border-4 border-amber-200 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-amber-500 rounded-full border-t-transparent animate-spin"></div>
+            </div>
           </div>
         ) : filteredItems.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-x-8 gap-y-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
             {filteredItems.map((item) => (
-              <div key={item.id} className="group bg-white rounded-xl p-4 hover:shadow-lg transition-all duration-300 border border-transparent hover:border-amber-100 flex gap-4 md:gap-6 items-start">
+              <div key={item.id} className="group flex flex-col bg-white rounded-2xl overflow-hidden hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all duration-300 border border-gray-100 p-4 relative">
 
                 {/* Image */}
-                <div className="w-24 h-24 md:w-32 md:h-32 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                <div className="relative w-full aspect-[4/3] overflow-hidden rounded-xl bg-gray-50 mb-6">
                   {item.image_url ? (
                     <img
                       src={item.image_url}
                       alt={item.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      <Utensils size={32} />
+                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-300">
+                      <Utensils size={48} strokeWidth={1} />
+                      <p className="text-xs uppercase tracking-widest mt-2">No Image</p>
                     </div>
                   )}
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-start mb-1">
-                    <h3 className="text-xl font-playfair font-bold text-gray-900 truncate pr-2 group-hover:text-amber-600 transition-colors">
-                      {item.name}
-                    </h3>
-                  </div>
+                <div className="flex flex-col flex-1 px-2 pb-2">
+                  <span className="text-[10px] uppercase tracking-widest font-bold text-teal-600 mb-2">
+                    {item.category}
+                  </span>
 
-                  <p className="text-gray-500 text-sm mb-3 line-clamp-2">
-                    {item.description}
+                  <h3 className="text-2xl font-playfair font-bold text-gray-900 leading-tight mb-3">
+                    {item.name}
+                  </h3>
+
+                  <p className="text-gray-500 text-sm leading-relaxed flex-1">
+                    {item.description || "A wonderful dish curated by our master chefs."}
                   </p>
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold px-2 py-1 bg-gray-100 text-gray-600 rounded">
-                      {item.category}
-                    </span>
-
-                  </div>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-20">
-            <Utensils className="mx-auto h-16 w-16 text-gray-300 mb-4" />
-            <h3 className="text-xl font-medium text-gray-900">No items found</h3>
-            <p className="text-gray-500 mt-2">Try adjusting your search or category.</p>
+          <div className="flex flex-col items-center justify-center py-32 text-center bg-white rounded-3xl border border-dashed border-gray-200">
+            <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mb-6">
+              <Utensils className="h-8 w-8 text-amber-500" />
+            </div>
+            <h3 className="text-2xl font-playfair font-bold text-gray-900">No divine dishes found</h3>
+            <p className="text-gray-500 mt-2 max-w-sm">We couldn't find anything matching your search. Explore our other tantalizing categories.</p>
           </div>
         )}
       </div>

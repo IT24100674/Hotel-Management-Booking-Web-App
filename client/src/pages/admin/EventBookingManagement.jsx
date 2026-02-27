@@ -345,7 +345,7 @@ const EventBookingManagement = () => {
 
                             <div className="space-y-1">
                                 <label className="text-sm font-medium text-gray-700 ml-1">Number of Guests</label>
-                                <input type="number" required min="1" value={formData.guestCount} onChange={e => setFormData({ ...formData, guestCount: e.target.value })} className="w-full border-gray-200 border rounded-xl p-3 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" placeholder="100" />
+                                <input type="number" required min="1" value={formData.guestCount} onChange={e => setFormData({ ...formData, guestCount: e.target.value })} onWheel={(e) => e.target.blur()} className="w-full border-gray-200 border rounded-xl p-3 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" placeholder="100" />
                             </div>
 
                             <div className="space-y-4 py-4 border-t border-gray-100 mt-6">
