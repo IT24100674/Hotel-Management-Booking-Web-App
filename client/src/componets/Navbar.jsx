@@ -106,7 +106,7 @@ const Navbar = () => {
                 className={`font-playfair text-2xl md:text-3xl font-bold tracking-tight transition-colors duration-300 ${isScrolled || !isHomePage ? "text-gray-900" : "text-white"
                     }`}
             >
-                Golden Waves
+                Golden Waves Hotel
             </Link>
 
 
