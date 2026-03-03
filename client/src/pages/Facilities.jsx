@@ -156,6 +156,13 @@ const Facilities = () => {
 
     const handleBookingSubmit = async (e) => {
         e.preventDefault();
+
+        // --- PHONE VALIDATION ---
+        if (bookingData.customer_phone.length !== 10 || !/^\d+$/.test(bookingData.customer_phone)) {
+            alert("Phone number must be exactly 10 digits.");
+            return;
+        }
+
         setSubmitting(true);
 
         try {

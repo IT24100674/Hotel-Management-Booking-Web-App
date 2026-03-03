@@ -34,16 +34,16 @@ const getStaffById = async (req, res) => {
 
 // Create a new staff member
 const createStaff = async (req, res) => {
-    const { name, role, email, phone, tempPassword } = req.body;
+    let { name, role, email, phone, tempPassword } = req.body;
+    if (email) email = email.toLowerCase();
     try {
         // Check if email already exists
         const { data: existingStaff } = await supabase
             .from('staff')
             .select('id')
-            .eq('email', email)
-            .single();
+            .ilike('email', email);
 
-        if (existingStaff) {
+        if (existingStaff && existingStaff.length > 0) {
             return res.status(400).json({ error: 'A staff member with this email already exists.' });
         }
 
@@ -68,7 +68,20 @@ const createStaff = async (req, res) => {
 // Update a staff member
 const updateStaff = async (req, res) => {
     const { id } = req.params;
-    const { name, role, email, phone, temp_password } = req.body;
+    let { name, role, email, phone, temp_password } = req.body;
+    if (email) {
+        email = email.toLowerCase();
+        // Check if email already exists for a different staff member
+        const { data: existingStaff } = await supabase
+            .from('staff')
+            .select('id')
+            .ilike('email', email)
+            .neq('id', id);
+
+        if (existingStaff && existingStaff.length > 0) {
+            return res.status(400).json({ error: 'A staff member with this email already exists.' });
+        }
+    }
 
     // Prepare updates object based on available fields
     const updates = {};

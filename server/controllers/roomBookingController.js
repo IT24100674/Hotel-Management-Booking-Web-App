@@ -48,6 +48,19 @@ const createRoomBooking = async (req, res) => {
         return res.status(400).json({ error: 'Missing required fields. Provide User ID or Guest Name & ID.' });
     }
 
+    // Phone number validation
+    if (guest_phone && (guest_phone.length !== 10 || !/^\d+$/.test(guest_phone))) {
+        return res.status(400).json({ error: 'Phone number must be exactly 10 digits.' });
+    }
+
+    if (!guest_phone) {
+        return res.status(400).json({ error: 'Phone number is required.' });
+    }
+
+    if (!/^\d{10}$/.test(guest_phone)) {
+        return res.status(400).json({ error: 'Phone number must be exactly 10 digits.' });
+    }
+
     try {
         // 1. Check if room is available
         const { data: existingBookings } = await supabase

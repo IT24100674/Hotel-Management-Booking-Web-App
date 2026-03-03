@@ -104,6 +104,13 @@ const FacilityBookingManagement = () => {
             let finalEmail = formData.guestEmail;
             let finalPhone = formData.customer_phone;
 
+            // --- PHONE VALIDATION ---
+            if (!finalPhone || finalPhone.length !== 10 || !/^\d+$/.test(finalPhone)) {
+                alert("Phone number must be exactly 10 digits.");
+                setSubmitting(false);
+                return;
+            }
+
             if (!formData.isGuest) {
                 const { data: users } = await supabase
                     .from('users')
@@ -325,49 +332,39 @@ const FacilityBookingManagement = () => {
 
                     {/* Customer Info */}
                     {formData.isGuest ? (
-                        <>
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Customer Name</label>
-                                <div className="relative">
-                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                                    <input type="text" required value={formData.customer_name} onChange={e => setFormData({ ...formData, customer_name: e.target.value })} className="w-full pl-10 pr-4 py-2 border border-gray-100 rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="Enter name" />
-                                </div>
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Customer Name</label>
+                            <div className="relative">
+                                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                <input type="text" required value={formData.customer_name} onChange={e => setFormData({ ...formData, customer_name: e.target.value })} className="w-full pl-10 pr-4 py-2 border border-gray-100 rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="Enter name" />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Phone</label>
-                                    <div className="relative">
-                                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                                        <input type="tel" value={formData.customer_phone} onChange={e => setFormData({ ...formData, customer_phone: e.target.value })} className="w-full pl-10 pr-4 py-2 border border-gray-100 rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="Phone" />
-                                    </div>
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">ID / Passport</label>
-                                    <div className="relative">
-                                        <Shield className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                                        <input type="text" required value={formData.customer_id_no} onChange={e => setFormData({ ...formData, customer_id_no: e.target.value })} className="w-full pl-10 pr-4 py-2 border border-gray-100 rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="NIC/Passport" />
-                                    </div>
-                                </div>
-                            </div>
-                        </>
+                        </div>
                     ) : (
-                        <>
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Member Email</label>
-                                <div className="relative">
-                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                                    <input type="email" required value={formData.guestEmail} onChange={e => setFormData({ ...formData, guestEmail: e.target.value })} className="w-full pl-10 pr-4 py-2 border border-gray-100 rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="email@example.com" />
-                                </div>
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Member Email</label>
+                            <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                <input type="email" required value={formData.guestEmail} onChange={e => setFormData({ ...formData, guestEmail: e.target.value })} className="w-full pl-10 pr-4 py-2 border border-gray-100 rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="email@example.com" />
                             </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">ID / Passport</label>
-                                <div className="relative">
-                                    <Shield className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                                    <input type="text" required value={formData.customer_id_no} onChange={e => setFormData({ ...formData, customer_id_no: e.target.value })} className="w-full pl-10 pr-4 py-2 border border-gray-100 rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="NIC/Passport" />
-                                </div>
-                            </div>
-                        </>
+                        </div>
                     )}
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Phone</label>
+                            <div className="relative">
+                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                <input type="tel" required value={formData.customer_phone} onChange={e => setFormData({ ...formData, customer_phone: e.target.value })} className="w-full pl-10 pr-4 py-2 border border-gray-100 rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="10 Digits" />
+                            </div>
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">ID / Passport</label>
+                            <div className="relative">
+                                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                <input type="text" required value={formData.customer_id_no} onChange={e => setFormData({ ...formData, customer_id_no: e.target.value })} className="w-full pl-10 pr-4 py-2 border border-gray-100 rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="NIC/Passport" />
+                            </div>
+                        </div>
+                    </div>
 
                     {/* Facility Selection */}
                     <div className="space-y-1">

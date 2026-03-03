@@ -118,12 +118,19 @@ const EventBookingManagement = () => {
 
                 if (users && users.length > 0) {
                     user_id = users[0].id;
-                    foundUserData = { name: users[0].name, email: users[0].email, phone: null };
+                    foundUserData = { name: users[0].name, email: users[0].email, phone: formData.guestPhone };
                 } else {
                     alert("User email not found. Use 'Walk-in / Guest' option.");
                     setSubmitting(false);
                     return;
                 }
+            }
+
+            // --- PHONE VALIDATION ---
+            if (formData.guestPhone.length !== 10 || !/^\d+$/.test(formData.guestPhone)) {
+                alert("Phone number must be exactly 10 digits.");
+                setSubmitting(false);
+                return;
             }
 
             // Availability Check
@@ -298,20 +305,10 @@ const EventBookingManagement = () => {
                             </div>
 
                             {formData.isGuest ? (
-                                <>
-                                    <div className="space-y-1">
-                                        <label className="text-sm font-medium text-gray-700 ml-1">Customer Name</label>
-                                        <input type="text" required value={formData.guestName} onChange={e => setFormData({ ...formData, guestName: e.target.value })} className="w-full border-gray-200 border rounded-xl p-3 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" placeholder="John Doe" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-sm font-medium text-gray-700 ml-1">Phone Number</label>
-                                        <input type="tel" value={formData.guestPhone} onChange={e => setFormData({ ...formData, guestPhone: e.target.value })} className="w-full border-gray-200 border rounded-xl p-3 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" placeholder="+1 234 567 890" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-sm font-medium text-gray-700 ml-1">ID / Passport / NIC</label>
-                                        <input type="text" required value={formData.guestId} onChange={e => setFormData({ ...formData, guestId: e.target.value })} className="w-full border-gray-200 border rounded-xl p-3 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" placeholder="ID Number" />
-                                    </div>
-                                </>
+                                <div className="space-y-1">
+                                    <label className="text-sm font-medium text-gray-700 ml-1">Customer Name</label>
+                                    <input type="text" required value={formData.guestName} onChange={e => setFormData({ ...formData, guestName: e.target.value })} className="w-full border-gray-200 border rounded-xl p-3 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" placeholder="John Doe" />
+                                </div>
                             ) : (
                                 <div className="space-y-1">
                                     <label className="text-sm font-medium text-gray-700 ml-1">Registered Email</label>
@@ -320,11 +317,20 @@ const EventBookingManagement = () => {
                             )}
 
                             <div className="space-y-1">
+                                <label className="text-sm font-medium text-gray-700 ml-1">Phone Number</label>
+                                <input type="tel" required value={formData.guestPhone} onChange={e => setFormData({ ...formData, guestPhone: e.target.value })} className="w-full border-gray-200 border rounded-xl p-3 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" placeholder="10 Digits" />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-sm font-medium text-gray-700 ml-1">ID / Passport / NIC</label>
+                                <input type="text" required value={formData.guestId} onChange={e => setFormData({ ...formData, guestId: e.target.value })} className="w-full border-gray-200 border rounded-xl p-3 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" placeholder="ID Number" />
+                            </div>
+
+                            <div className="space-y-1">
                                 <label className="text-sm font-medium text-gray-700 ml-1">Select Package</label>
                                 <select required value={formData.eventId} onChange={e => setFormData({ ...formData, eventId: e.target.value })} className="w-full border-gray-200 border rounded-xl p-3 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none bg-white">
                                     <option value="">Choose a package...</option>
                                     {events.map(h => (
-                                        <option key={h.id} value={h.id}>{h.title} (${h.price_per_guest}/guest)</option>
+                                        <option key={h.id} value={h.id}>{h.title} (${h.price_per_guest}/guest) - Max {h.capacity}</option>
                                     ))}
                                 </select>
                             </div>

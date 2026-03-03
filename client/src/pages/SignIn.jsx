@@ -19,7 +19,7 @@ const SignIn = () => {
         setResetMessage(null)
 
         try {
-            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            const { error } = await supabase.auth.resetPasswordForEmail(email.toLowerCase(), {
                 redirectTo: `${window.location.origin}/update-password`,
             })
 
@@ -40,7 +40,7 @@ const SignIn = () => {
 
         // 1. Try Supabase Auth
         const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-            email,
+            email: email.toLowerCase(),
             password,
         })
 
@@ -107,7 +107,7 @@ const SignIn = () => {
             const { data: staffData, error: staffError } = await supabase
                 .from('staff')
                 .select('*')
-                .eq('email', email)
+                .ilike('email', email)
                 .eq('temp_password', password)
                 .single()
 

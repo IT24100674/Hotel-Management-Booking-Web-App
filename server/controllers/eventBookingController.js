@@ -36,6 +36,11 @@ const createEventBooking = async (req, res) => {
         transactionId
     } = req.body;
 
+    // --- PHONE VALIDATION ---
+    if (!customer_phone || customer_phone.length !== 10 || !/^\d+$/.test(customer_phone)) {
+        return res.status(400).json({ error: 'Phone number must be exactly 10 digits.' });
+    }
+
     try {
         // 1. Availability Check
         const { data: existing } = await supabase

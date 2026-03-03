@@ -13,8 +13,7 @@ const MenuManagement = () => {
         description: '',
         category: 'Main Course',
         is_available: true,
-        image_url: '',
-        is_featured: false
+        image_url: ''
     });
     const [imageFile, setImageFile] = useState(null);
     const [uploading, setUploading] = useState(false);
@@ -121,8 +120,6 @@ const MenuManagement = () => {
             description: '',
             category: 'Main Course',
             is_available: true,
-            is_available: true,
-            is_featured: false,
             image_url: ''
         });
         setImageFile(null);
@@ -136,8 +133,6 @@ const MenuManagement = () => {
             description: item.description || '',
             category: item.category,
             is_available: item.is_available,
-            is_available: item.is_available,
-            is_featured: item.is_featured || false,
             image_url: item.image_url || ''
         });
         setImageFile(null);
@@ -256,19 +251,6 @@ const MenuManagement = () => {
                             />
                             <label htmlFor="is_available" className="text-sm font-medium text-gray-700 select-none">
                                 Available
-                            </label>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                id="is_featured"
-                                checked={formData.is_featured}
-                                onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
-                                className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                            />
-                            <label htmlFor="is_featured" className="text-sm font-medium text-gray-700 select-none">
-                                Feature on Home Page
                             </label>
                         </div>
                     </div>

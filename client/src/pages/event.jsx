@@ -93,6 +93,13 @@ const Event = () => {
                 return;
             }
 
+            // --- PHONE VALIDATION ---
+            if (bookingData.customer_phone.length !== 10 || !/^\d+$/.test(bookingData.customer_phone)) {
+                alert("Phone number must be exactly 10 digits.");
+                setSubmitting(false);
+                return;
+            }
+
             // --- CAPACITY CHECK ---
             if (bookingData.guest_count > selectedHall.capacity) {
                 alert(`The selected package has a maximum capacity of ${selectedHall.capacity} guests. Please reduce the guest count or choose a different package.`);

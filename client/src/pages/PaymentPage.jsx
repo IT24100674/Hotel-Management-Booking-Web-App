@@ -212,6 +212,12 @@ const PaymentPage = () => {
                                         </div>
                                         <span className="font-medium text-gray-900">{bookingDetails.check_out}</span>
                                     </div>
+                                    <div className="pt-2 border-t border-gray-50 mt-2 space-y-1">
+                                        <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">Guest Details</p>
+                                        <p className="text-sm font-medium text-gray-900">{bookingDetails.guest_name}</p>
+                                        <p className="text-xs text-gray-500">{bookingDetails.guest_email}</p>
+                                        <p className="text-xs text-gray-500">{bookingDetails.guest_phone}</p>
+                                    </div>
                                 </>
                             )}
 

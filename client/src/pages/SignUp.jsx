@@ -17,9 +17,10 @@ const SignUp = () => {
         setMessage(null)
 
         try {
+            const normalizedEmail = email.toLowerCase();
             // 1. Sign up with Supabase Auth
             const { data, error: authError } = await supabase.auth.signUp({
-                email,
+                email: normalizedEmail,
                 password,
                 options: {
                     data: {
@@ -37,7 +38,7 @@ const SignUp = () => {
                     .insert([{
                         id: data.user.id,
                         name: name,
-                        email: email,
+                        email: normalizedEmail,
                         role: 'user'
                     }]);
 

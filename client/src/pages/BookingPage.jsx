@@ -15,6 +15,8 @@ const BookingPage = () => {
     const [checkIn, setCheckIn] = useState('');
     const [checkOut, setCheckOut] = useState('');
     const [guestId, setGuestId] = useState('');
+    const [profileName, setProfileName] = useState('');
+    const [guestPhone, setGuestPhone] = useState('');
     const [totalPrice, setTotalPrice] = useState(0);
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -32,6 +34,17 @@ const BookingPage = () => {
                     return;
                 }
                 setUser(authUser);
+
+                // Fetch User Profile Name
+                const { data: profile, error: profileError } = await supabase
+                    .from('users')
+                    .select('name')
+                    .eq('id', authUser.id)
+                    .single();
+
+                if (profile && !profileError) {
+                    setProfileName(profile.name || 'Valued Guest');
+                }
 
                 // 2. Get Room Details
                 const res = await fetch(`http://localhost:5000/api/rooms/${roomId}`);
@@ -76,6 +89,12 @@ const BookingPage = () => {
             return;
         }
 
+        // Phone number validation
+        if (guestPhone.length !== 10 || !/^\d+$/.test(guestPhone)) {
+            setError("Phone number must be exactly 10 digits.");
+            return;
+        }
+
         setSubmitting(true);
 
         try {
@@ -111,10 +130,15 @@ const BookingPage = () => {
             state: {
                 bookingDetails: {
                     user_id: user.id,
+                    guest_name: user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || '',
+                    guest_email: user?.email || '',
                     room_id: roomId,
                     check_in: checkIn,
                     check_out: checkOut,
                     guest_id_no: guestId,
+                    guest_name: profileName,
+                    guest_email: user.email,
+                    guest_phone: guestPhone,
                     total_price: totalPrice
                 },
                 room: room
@@ -289,6 +313,21 @@ const BookingPage = () => {
                                         </div>
                                     </div>
 
+
+                                    <div className="space-y-2">
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">Guest Phone Number</label>
+                                        <div className="relative group">
+                                            <input
+                                                type="tel"
+                                                required
+                                                value={guestPhone}
+                                                onChange={(e) => setGuestPhone(e.target.value)}
+                                                placeholder="Enter Phone Number"
+                                                className="w-full px-4 py-3 bg-gray-50 rounded-xl border-2 border-transparent focus:bg-white focus:border-primary/20 focus:ring-0 outline-none transition-all font-medium text-gray-900"
+                                            />
+                                        </div>
+                                    </div>
+
                                     <div className="sm:col-span-2 space-y-2">
                                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">Guest ID / NIC / Passport</label>
                                         <div className="relative group">
@@ -383,6 +422,18 @@ const BookingPage = () => {
                                 <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
                                     <span className="text-gray-500">Check-out</span>
                                     <span className="font-medium text-gray-900">{checkOut}</span>
+                                </div>
+                                <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
+                                    <span className="text-gray-500">Name</span>
+                                    <span className="font-medium text-gray-900">{profileName}</span>
+                                </div>
+                                <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
+                                    <span className="text-gray-500">Email</span>
+                                    <span className="font-medium text-gray-900">{user.email}</span>
+                                </div>
+                                <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
+                                    <span className="text-gray-500">Guest Phone</span>
+                                    <span className="font-medium text-gray-900">{guestPhone}</span>
                                 </div>
                                 <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
                                     <span className="text-gray-500">Guest ID</span>
