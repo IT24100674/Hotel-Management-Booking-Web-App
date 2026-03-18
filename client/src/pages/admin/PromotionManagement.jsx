@@ -35,6 +35,9 @@ const PromotionManagement = () => {
         }
     };
 
+    // Handles submitting the form for both Creating and Updating promotions.
+    // Differentiates the action by checking if an editingPromoId is set.
+    // Uses FormData instead of JSON to securely transmit the image file alongside the text data.
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -83,6 +86,8 @@ const PromotionManagement = () => {
         }
     };
 
+    // Pre-fills the form with the selected promotion's details for editing.
+    // Sets the editingPromoId so the form knows to perform a PUT request (update) instead of POST (create).
     const handleEdit = (promo) => {
         setEditingPromoId(promo.id);
         setNewPromo({
@@ -96,6 +101,7 @@ const PromotionManagement = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
+    // Resets the form and editing state back to default (create mode).
     const cancelEdit = () => {
         setEditingPromoId(null);
         setNewPromo({ title: '', discount_percentage: '', start_date: '', end_date: '', target_type: 'All' });

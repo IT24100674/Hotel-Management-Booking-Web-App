@@ -1,6 +1,7 @@
 const supabase = require('../config/supabaseClient');
 
-// Helper function to upload file to Supabase Storage
+// Helper function to upload an image file to Supabase Storage
+// Returns the public URL of the uploaded image so it can be saved in the database
 const uploadImage = async (file) => {
     try {
         const fileExt = file.originalname.split('.').pop();
@@ -29,7 +30,8 @@ const uploadImage = async (file) => {
     }
 };
 
-// Helper to check for overlapping promotions of the same type
+// Helper to check if a promotion already exists for the same target (e.g., 'Rooms', 'Events') during the selected dates.
+// This prevents having two different active offers for the exact same category at the same time.
 const checkPromotionOverlap = async (target_type, start_date, end_date, excludeId = null) => {
     let query = supabase
         .from('promotions')
@@ -83,6 +85,9 @@ const getActivePromotionsByType = async (req, res) => {
     }
 };
 
+// Creates a new promotion in the database.
+// It first checks if the dates are valid and if there are any overlapping promotions.
+// If an image is provided, it uploads the image first, then saves the promotion data including the image URL.
 const createPromotion = async (req, res) => {
     const { title, discount_percentage, start_date, end_date, target_type } = req.body;
 
@@ -176,6 +181,9 @@ const togglePromotionStatus = async (req, res) => {
     }
 };
 
+// Updates an existing promotion.
+// It checks for date overlaps (excluding itself).
+// If a NEW image is uploaded, it automatically finds and DELETES the old image from Supabase storage keeping the storage bucket clean, before uploading the new one.
 const updatePromotion = async (req, res) => {
     const { id } = req.params;
     const { title, discount_percentage, start_date, end_date, target_type } = req.body;

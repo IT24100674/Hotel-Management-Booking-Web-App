@@ -48,21 +48,15 @@ const createRoomBooking = async (req, res) => {
         return res.status(400).json({ error: 'Missing required fields. Provide User ID or Guest Name & ID.' });
     }
 
-    // Phone number validation
-    if (guest_phone && (guest_phone.length !== 10 || !/^\d+$/.test(guest_phone))) {
-        return res.status(400).json({ error: 'Phone number must be exactly 10 digits.' });
-    }
-
-    if (!guest_phone) {
-        return res.status(400).json({ error: 'Phone number is required.' });
-    }
-
-    if (!/^\d{10}$/.test(guest_phone)) {
-        return res.status(400).json({ error: 'Phone number must be exactly 10 digits.' });
+    // Strict phone number validation: ensures it is exactly 10 digits.
+    // This was added to prevent malformed contact details from entering the system.
+    if (!guest_phone || !/^\d{10}$/.test(guest_phone)) {
+        return res.status(400).json({ error: 'Phone number is required and must be exactly 10 digits.' });
     }
 
     try {
-        // 1. Check if room is available
+        // 1. Prevent Double-Booking: Query the database for any existing confirmed bookings 
+        // that share dates with the requested check-in/check-out boundaries.
         const { data: existingBookings } = await supabase
             .from('room_bookings')
             .select('id, check_in, check_out') // Select check_in and check_out for the overlap logic
@@ -104,7 +98,8 @@ const createRoomBooking = async (req, res) => {
         if (bookingError) throw bookingError;
         const newBooking = bookingData[0];
 
-        // 3. Optional: Record Payment (for manual bookings)
+        // 3. Financial Integration: Record the Payment immediately (for manual/cash bookings).
+        // If the payment record fails to insert, we roll back and delete the booking to prevent orphaned data.
         if (paymentMethod) {
             const { error: paymentError } = await supabase
                 .from('payments')

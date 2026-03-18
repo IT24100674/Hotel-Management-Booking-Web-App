@@ -171,6 +171,19 @@ create table public.faqs (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- 13. Promotions Table
+create table public.promotions (
+  id uuid default uuid_generate_v4() primary key,
+  title text not null,
+  discount_percentage numeric,
+  start_date date not null,
+  end_date date not null,
+  target_type text default 'All', -- Rooms, Events, Facilities, All
+  is_active boolean default true,
+  image_url text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
 -- ==========================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
 -- ==========================================
@@ -187,6 +200,7 @@ alter table public.reviews enable row level security;
 alter table public.facility_bookings enable row level security;
 alter table public.payments enable row level security;
 alter table public.faqs enable row level security;
+alter table public.promotions enable row level security;
 
 -- Public Read Access
 create policy "Public Access Events Select" on public.events for select using (true);
@@ -195,10 +209,12 @@ create policy "Public Access Facilities Select" on public.facilities for select 
 create policy "Public Access Menu Select" on public.menu for select using (true);
 create policy "Public Access Reviews Select" on public.reviews for select using (true);
 create policy "Public Access FAQs Select" on public.faqs for select using (true);
+create policy "Public Access Promotions Select" on public.promotions for select using (true);
 create policy "Public Access Facility Bookings All" on public.facility_bookings for all using (true) with check (true);
 create policy "Public Access Payments All" on public.payments for all to anon, authenticated using (true) with check (true);
 grant all on public.payments to anon, authenticated, service_role;
 grant all on public.faqs to anon, authenticated, service_role;
+grant all on public.promotions to anon, authenticated, service_role;
 
 -- Admin/Staff Access (Simplicifed for Dev, usually restricted by role)
 create policy "Staff Access All Staff" on public.staff for all using (true);
@@ -207,6 +223,7 @@ create policy "Staff Access All Events" on public.events for all using (true);
 create policy "Staff Access All Rooms" on public.rooms for all using (true);
 create policy "Staff Access All Facilities" on public.facilities for all using (true);
 create policy "Staff Access All FAQs" on public.faqs for all using (true) with check (true);
+create policy "Staff Access All Promotions" on public.promotions for all using (true) with check (true);
 
 -- Users
 create policy "Users manage own profile" on public.users for all using (auth.uid() = id);

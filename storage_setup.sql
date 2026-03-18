@@ -9,7 +9,8 @@ values
   ('menu_images', 'menu_images', true),
   ('event_images', 'event_images', true),
   ('facility_images', 'facility_images', true),
-  ('staff_images', 'staff_images', true)
+  ('staff_images', 'staff_images', true),
+  ('promotion_images', 'promotion_images', true)
 on conflict (id) do update set public = true;
 
 -- 2. Drop existing broad policies to avoid conflicts
@@ -23,16 +24,16 @@ drop policy if exists "Public Access Storage Delete" on storage.objects;
 
 create policy "Public Access Storage Select"
 on storage.objects for select
-using ( bucket_id in ('room_images', 'menu_images', 'event_images', 'facility_images', 'staff_images') );
+using ( bucket_id in ('room_images', 'menu_images', 'event_images', 'facility_images', 'staff_images', 'promotion_images') );
 
 create policy "Public Access Storage Insert"
 on storage.objects for insert
-with check ( bucket_id in ('room_images', 'menu_images', 'event_images', 'facility_images', 'staff_images') );
+with check ( bucket_id in ('room_images', 'menu_images', 'event_images', 'facility_images', 'staff_images', 'promotion_images') );
 
 create policy "Public Access Storage Update"
 on storage.objects for update
-using ( bucket_id in ('room_images', 'menu_images', 'event_images', 'facility_images', 'staff_images') );
+using ( bucket_id in ('room_images', 'menu_images', 'event_images', 'facility_images', 'staff_images', 'promotion_images') );
 
 create policy "Public Access Storage Delete"
 on storage.objects for delete
-using ( bucket_id in ('room_images', 'menu_images', 'event_images', 'facility_images', 'staff_images') );
+using ( bucket_id in ('room_images', 'menu_images', 'event_images', 'facility_images', 'staff_images', 'promotion_images') );
