@@ -14,7 +14,9 @@ import {
     MessageCircleQuestion,
     Star,
     Home,
-    LogOut
+    LogOut,
+    LineChart,
+    Tag
 } from 'lucide-react';
 
 const AdminLayout = () => {
@@ -33,6 +35,8 @@ const AdminLayout = () => {
         { path: '/admin/facilities', label: 'Other Facilities', icon: Building2, roles: ['owner', 'facility_manager'] },
         { path: '/admin/staff', label: 'Staff', icon: Users, roles: ['owner', 'staff_manager'] },
         { path: '/admin/menu', label: 'Menu', icon: UtensilsCrossed, roles: ['owner', 'restaurant_manager', 'content_manager'] },
+        { path: '/admin/finance', label: 'Finance Reports', icon: LineChart, roles: ['owner', 'staff_manager', 'manager'] },
+        { path: '/admin/promotions', label: 'Promotions', icon: Tag, roles: ['owner', 'manager'] },
         { path: '/admin/faqs', label: 'Manage FAQs', icon: MessageCircleQuestion, roles: ['owner', 'content_manager', 'support_manager'] },
         { path: '/admin/reviews', label: 'Reviews', icon: Star, roles: ['owner', 'support_manager', 'manager', 'content_manager'] },
         { path: '/', label: 'Home', icon: Home, roles: ['owner', 'staff_manager', 'event_manager', 'room_manager', 'facility_manager', 'restaurant_manager', 'content_manager', 'support_manager', 'manager', 'receptionist'] },

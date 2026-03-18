@@ -37,28 +37,63 @@ const DashboardHome = () => {
     const fetchDashboardData = async () => {
         try {
             // Fetch All Booking Types and Stats
-            const [roomBookingsRes, statsRes, eventBookingsRes, facilityBookingsRes] = await Promise.all([
+            const [roomBookingsRes, eventBookingsRes, facilityBookingsRes] = await Promise.all([
                 fetch('http://localhost:5000/api/room-bookings'),
-                fetch('http://localhost:5000/api/room-bookings/stats'),
                 fetch('http://localhost:5000/api/event-bookings'),
                 fetch('http://localhost:5000/api/facility-bookings')
             ]);
 
             let roomBookings = [];
-            let roomStats = { totalIncome: 0, monthlyIncome: 0, monthlyChange: 0 };
             let eventBookings = [];
             let facilityBookings = [];
 
             if (roomBookingsRes.ok) roomBookings = await roomBookingsRes.json();
-            if (statsRes.ok) roomStats = await statsRes.json();
             if (eventBookingsRes.ok) eventBookings = await eventBookingsRes.json();
             if (facilityBookingsRes.ok) facilityBookings = await facilityBookingsRes.json();
 
-            // Update State for Stats (now represents aggregate)
+            // Calculate Payment Stats Directly from Supabase
+            const { data: allPayments } = await supabase
+                .from('payments')
+                .select('amount, created_at')
+                .eq('payment_status', 'Paid');
+
+            let totalIncome = 0;
+            let currentMonthIncome = 0;
+            let lastMonthIncome = 0;
+
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+
+            const lastMonthDate = currentMonth === 0 ? 11 : currentMonth - 1;
+            const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+
+            if (allPayments) {
+                allPayments.forEach(p => {
+                    const amount = Number(p.amount || 0);
+                    totalIncome += amount;
+
+                    const date = new Date(p.created_at);
+                    if (date.getMonth() === currentMonth && date.getFullYear() === currentYear) {
+                        currentMonthIncome += amount;
+                    } else if (date.getMonth() === lastMonthDate && date.getFullYear() === lastMonthYear) {
+                        lastMonthIncome += amount;
+                    }
+                });
+            }
+
+            let monthlyChange = 0;
+            if (lastMonthIncome > 0) {
+                monthlyChange = ((currentMonthIncome - lastMonthIncome) / lastMonthIncome) * 100;
+            } else if (currentMonthIncome > 0) {
+                monthlyChange = 100;
+            }
+
+            // Update State for Stats
             setStatsData({
-                totalIncome: Number(roomStats.totalIncome),
-                monthlyIncome: Number(roomStats.monthlyIncome),
-                monthlyChange: roomStats.monthlyChange
+                totalIncome: totalIncome,
+                monthlyIncome: currentMonthIncome,
+                monthlyChange: parseFloat(monthlyChange.toFixed(1))
             });
 
             // Normalize Room Transactions
@@ -167,8 +202,8 @@ const DashboardHome = () => {
                                                 </td>
                                                 <td className="py-4 text-gray-600">
                                                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${item.type === 'room' ? 'bg-indigo-50 text-indigo-700' :
-                                                            item.type === 'event' ? 'bg-amber-50 text-amber-700' :
-                                                                'bg-emerald-50 text-emerald-700'
+                                                        item.type === 'event' ? 'bg-amber-50 text-amber-700' :
+                                                            'bg-emerald-50 text-emerald-700'
                                                         }`}>
                                                         {item.type === 'room' ? 'Room' :
                                                             item.type === 'event' ? (item.events?.type || 'Event') :

@@ -10,6 +10,8 @@ const AdminDashboard = () => {
   const [staffList, setStaffList] = useState([]);
   const navigate = useNavigate();
   const [currentRole, setCurrentRole] = useState(null);
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [activeBookings, setActiveBookings] = useState(0);
 
   useEffect(() => {
     const getSession = async () => {
@@ -83,8 +85,31 @@ const AdminDashboard = () => {
       }
     };
 
+    const fetchDashboardStats = async () => {
+      try {
+        const { data: payments } = await supabase
+          .from('payments')
+          .select('amount')
+          .eq('payment_status', 'Paid');
+
+        if (payments) {
+          const revenue = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+          setTotalRevenue(revenue);
+        }
+
+        const { count: rooms } = await supabase.from('room_bookings').select('*', { count: 'exact', head: true }).in('status', ['Confirmed', 'CheckedIn', 'Checked In']);
+        const { count: events } = await supabase.from('event_bookings').select('*', { count: 'exact', head: true }).eq('status', 'Confirmed');
+        const { count: facilities } = await supabase.from('facility_bookings').select('*', { count: 'exact', head: true }).eq('status', 'Confirmed');
+
+        setActiveBookings((rooms || 0) + (events || 0) + (facilities || 0));
+      } catch (err) {
+        console.error('Error fetching stats:', err);
+      }
+    };
+
     if (user) {
       fetchStaff();
+      fetchDashboardStats();
     }
   }, [user]);
 
@@ -225,17 +250,17 @@ const AdminDashboard = () => {
             <div className="h-2 w-2 rounded-full bg-secondary mb-2 animate-pulse"></div>
           </div>
         </div>
-        {/* Placeholder for other stats */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow opacity-60">
+        {/* Other stats */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
           <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-4">Active Bookings</h3>
           <div className="flex items-end justify-between">
-            <p className="text-4xl font-playfair font-bold text-gray-900">-</p>
+            <p className="text-4xl font-playfair font-bold text-gray-900">{activeBookings}</p>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow opacity-60">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
           <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-4">Total Revenue</h3>
           <div className="flex items-end justify-between">
-            <p className="text-4xl font-playfair font-bold text-gray-900">-</p>
+            <p className="text-4xl font-playfair font-bold text-gray-900">${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
           </div>
         </div>
       </div>

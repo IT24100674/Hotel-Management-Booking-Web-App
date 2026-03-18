@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Bed, User, Wifi, Maximize, ArrowRight, Loader } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import { Tag } from 'lucide-react';
 
-const RoomCard = ({ room, navigate, getCapacity }) => {
+const RoomCard = ({ room, navigate, getCapacity, activePromo }) => {
     const handleBookClick = async () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
@@ -13,6 +14,10 @@ const RoomCard = ({ room, navigate, getCapacity }) => {
         }
         navigate(`/book/${room.id}`);
     };
+
+    const originalPrice = Number(room.price);
+    const hasDiscount = activePromo && activePromo.discount_percentage > 0;
+    const discountedPrice = hasDiscount ? originalPrice - (originalPrice * (activePromo.discount_percentage / 100)) : originalPrice;
 
     return (
         <div className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 group flex flex-col h-full">
@@ -41,10 +46,25 @@ const RoomCard = ({ room, navigate, getCapacity }) => {
                     </div>
                 )}
 
+                {hasDiscount && (
+                    <div className="absolute top-12 right-4 bg-orange-500/95 backdrop-blur-sm px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider text-white shadow-sm flex items-center gap-1">
+                        <Tag size={12} /> {activePromo.discount_percentage}% OFF
+                    </div>
+                )}
+
                 <div className="absolute bottom-4 left-4 text-white">
 
                     <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-bold font-playfair">${room.price}</span>
+                        {hasDiscount ? (
+                            <div className="flex flex-col">
+                                <span className="text-sm line-through text-gray-300">${originalPrice}</span>
+                                <span className="text-2xl font-bold font-playfair text-amber-300">
+                                    ${discountedPrice.toFixed(2)}
+                                </span>
+                            </div>
+                        ) : (
+                            <span className="text-2xl font-bold font-playfair">${originalPrice}</span>
+                        )}
                         <span className="text-xs opacity-75">/ night</span>
                     </div>
                 </div>
@@ -93,6 +113,7 @@ const Rooms = () => {
     const [rooms, setRooms] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [activePromo, setActivePromo] = useState(null);
     const navigate = useNavigate();
 
     const [selectedCategory, setSelectedCategory] = useState('All');
@@ -103,12 +124,23 @@ const Rooms = () => {
 
     const fetchRooms = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/rooms');
-            const data = await res.json();
-            if (res.ok) {
-                setRooms(data);
+            const [roomsRes, promoRes] = await Promise.all([
+                fetch('http://localhost:5000/api/rooms'),
+                fetch('http://localhost:5000/api/promotions/active/Rooms')
+            ]);
+
+            if (roomsRes.ok) {
+                setRooms(await roomsRes.json());
             } else {
                 setError('Failed to load rooms');
+            }
+
+            if (promoRes.ok) {
+                const promos = await promoRes.json();
+                if (promos && promos.length > 0) {
+                    const bestPromo = promos.reduce((prev, current) => (prev.discount_percentage > current.discount_percentage) ? prev : current);
+                    setActivePromo(bestPromo);
+                }
             }
         } catch (err) {
             setError('Error connecting to server');
@@ -189,6 +221,7 @@ const Rooms = () => {
                                         room={room}
                                         navigate={navigate}
                                         getCapacity={getCapacity}
+                                        activePromo={activePromo}
                                     />
                                 ))}
                             </div>

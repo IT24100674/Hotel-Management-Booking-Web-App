@@ -11,6 +11,7 @@ const Home = () => {
   const navigate = useNavigate()
   const [menuItems, setMenuItems] = useState([])
   const [faqs, setFaqs] = useState([])
+  const [activePromotions, setActivePromotions] = useState([])
 
   const facilities = [
     {
@@ -36,7 +37,27 @@ const Home = () => {
   useEffect(() => {
     fetchFeaturedMenu();
     fetchFaqs();
+    fetchActivePromotions();
   }, []);
+
+  const fetchActivePromotions = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/promotions');
+      const data = await res.json();
+      if (res.ok) {
+        const today = new Date().toISOString().split('T')[0];
+        // Filter exclusively for promotions that are currently active and valid
+        const validPromos = data.filter(promo =>
+          promo.is_active &&
+          promo.start_date <= today &&
+          promo.end_date >= today
+        );
+        setActivePromotions(validPromos);
+      }
+    } catch (err) {
+      console.error('Error fetching promotions for home:', err);
+    }
+  };
 
   const fetchFaqs = async () => {
     try {
@@ -193,6 +214,81 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Special Offers Section */}
+      {activePromotions.length > 0 && (
+        <section className="py-24 bg-white relative">
+          <div className="container-custom">
+
+            <div className="w-full">
+              <div className="text-center mb-16">
+                <span className="text-secondary font-bold tracking-[0.3em] uppercase text-xs mb-4 block">Exclusive Deals</span>
+                <h2 className="font-playfair text-4xl md:text-5xl font-black text-slate-900 mb-6">Special Offers</h2>
+                <div className="w-20 h-1 bg-slate-900 mx-auto"></div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {activePromotions.map((promo) => (
+                  <div
+                    key={promo.id}
+                    className="group relative h-[450px] overflow-hidden cursor-pointer border border-gray-100 hover:border-gray-200 transition-colors bg-gray-50 flex items-center justify-center p-8"
+                    onClick={() => navigate(promo.target_type === 'Rooms' ? '/rooms' : promo.target_type === 'Events' ? '/event-packages' : promo.target_type === 'Facilities' ? '/facilities' : '/rooms')}
+                  >
+                    {promo.image_url ? (
+                      <>
+                        <img
+                          src={promo.image_url}
+                          alt={promo.title}
+                          className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-1000 ease-out"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90 group-hover:opacity-100 transition-opacity duration-500 z-0"></div>
+
+                        {promo.discount_percentage && (
+                          <div className="absolute top-6 right-6 z-20">
+                            <span className="bg-[#da291c] text-white font-black tracking-widest text-sm uppercase px-4 py-2 shadow-2xl skew-x-[-10deg] inline-block">
+                              <span className="skew-x-[10deg] inline-block">{promo.discount_percentage}% OFF</span>
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="absolute inset-x-0 bottom-0 p-8 flex justify-between items-end z-10">
+                          <div className="w-[60%]">
+                            <span className="text-secondary font-bold tracking-[0.2em] text-[10px] uppercase mb-2 block drop-shadow-md">
+                              {promo.target_type === 'All' ? 'Special Deal' : `${promo.target_type.slice(0, -1)} Offer`}
+                            </span>
+                            <h3 className="font-black tracking-[0.15em] text-[20px] uppercase leading-snug drop-shadow-[0_5px_5px_rgba(0,0,0,1)]" style={{ color: '#FCD34D' }}>
+                              {promo.title}
+                            </h3>
+                          </div>
+                          <span className="text-white text-[11px] font-bold tracking-[0.15em] uppercase border-b border-white pb-1 group-hover:text-amber-400 group-hover:border-amber-400 transition-colors whitespace-nowrap drop-shadow-[0_3px_3px_rgba(0,0,0,0.8)]">
+                            View Offer
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="relative z-10 text-center flex flex-col justify-center items-center w-full h-full group-hover:scale-[1.02] transition-transform duration-700 ease-out">
+                        <span className="text-secondary font-bold tracking-[0.2em] text-[10px] uppercase mb-4 opacity-80">
+                          {promo.target_type === 'All' ? 'Exclusive Match' : `${promo.target_type} Exclusive`}
+                        </span>
+                        <h3 className="text-slate-800 font-playfair font-black text-2xl md:text-3xl tracking-[0.05em] uppercase mb-10 leading-snug max-w-[80%]">
+                          {promo.title}
+                        </h3>
+                        <span className="text-slate-600 text-[11px] font-bold tracking-[0.15em] uppercase border-b border-slate-300 pb-1 group-hover:text-secondary group-hover:border-secondary transition-colors whitespace-nowrap">
+                          View Details
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {activePromotions.length === 0 && (
+                  <div className="col-span-1 md:col-span-2 lg:col-span-3 py-20 text-center flex flex-col items-center justify-center opacity-50">
+                    <p className="text-sm tracking-[0.2em] uppercase font-bold text-gray-400">No Exclusive Offers Available At This Time</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* FAQ Preview Section */}
       <section className="section-padding bg-white relative overflow-hidden">

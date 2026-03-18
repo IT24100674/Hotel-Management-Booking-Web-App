@@ -27,6 +27,8 @@ const eventBookingRoutes = require('./routes/eventBookingRoutes');
 const facilityBookingRoutes = require('./routes/facilityBookingRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const faqRoutes = require('./routes/faqRoutes');
+const financeRoutes = require('./routes/financeRoutes');
+const promotionRoutes = require('./routes/promotionRoutes');
 
 app.use('/api/events', eventRoutes);
 app.use('/api/rooms', roomRoutes);
@@ -40,6 +42,8 @@ app.use('/api/event-bookings', eventBookingRoutes);
 app.use('/api/facility-bookings', facilityBookingRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/faqs', faqRoutes);
+app.use('/api/finance', financeRoutes);
+app.use('/api/promotions', promotionRoutes);
 
 app.get('/', (req, res) => {
     res.send('API is running...');

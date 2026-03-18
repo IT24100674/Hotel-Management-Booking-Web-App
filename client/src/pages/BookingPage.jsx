@@ -10,6 +10,7 @@ const BookingPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [user, setUser] = useState(null);
+    const [activePromo, setActivePromo] = useState(null);
 
     // Form State
     const [checkIn, setCheckIn] = useState('');
@@ -52,6 +53,16 @@ const BookingPage = () => {
                 const data = await res.json();
                 setRoom(data);
 
+                // 3. Get Promotions
+                const promoRes = await fetch(`http://localhost:5000/api/promotions/active/Rooms`);
+                if (promoRes.ok) {
+                    const promos = await promoRes.json();
+                    if (promos && promos.length > 0) {
+                        const bestPromo = promos.reduce((prev, current) => (prev.discount_percentage > current.discount_percentage) ? prev : current);
+                        setActivePromo(bestPromo);
+                    }
+                }
+
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -70,12 +81,14 @@ const BookingPage = () => {
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
             if (diffDays > 0) {
-                setTotalPrice(diffDays * room.price);
+                const originalTotal = diffDays * room.price;
+                const discountAmount = activePromo ? originalTotal * (activePromo.discount_percentage / 100) : 0;
+                setTotalPrice(originalTotal - discountAmount);
             } else {
                 setTotalPrice(0);
             }
         }
-    }, [checkIn, checkOut, room]);
+    }, [checkIn, checkOut, room, activePromo]);
 
     const handleBooking = async (e) => {
         e.preventDefault();
@@ -239,8 +252,22 @@ const BookingPage = () => {
                                             <span>Nightly Rate</span>
                                         </div>
                                         <div className="flex items-baseline gap-1">
-                                            <span className="text-primary font-bold text-xl font-playfair">${room.price}</span>
-                                            <span className="text-xs text-gray-400">/ night</span>
+                                            {activePromo ? (
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs line-through text-gray-400">${room.price}</span>
+                                                    <div className="flex items-baseline gap-1">
+                                                        <span className="text-amber-500 font-bold text-xl font-playfair">
+                                                            ${(room.price - (room.price * activePromo.discount_percentage / 100)).toFixed(2)}
+                                                        </span>
+                                                        <span className="text-xs text-gray-400">/ night</span>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-baseline gap-1">
+                                                    <span className="text-primary font-bold text-xl font-playfair">${room.price}</span>
+                                                    <span className="text-xs text-gray-400">/ night</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -353,13 +380,19 @@ const BookingPage = () => {
                                         <span>Duration</span>
                                         <span className="font-medium">
                                             {checkIn && checkOut && totalPrice > 0
-                                                ? `${totalPrice / room.price} nights`
+                                                ? `${Math.ceil(Math.abs(new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24))} nights`
                                                 : '-'}
                                         </span>
                                     </div>
+                                    {activePromo && (
+                                        <div className="flex justify-between text-emerald-600 text-sm font-medium">
+                                            <span>Promotion Applied ({activePromo.discount_percentage}%)</span>
+                                            <span>-{activePromo.discount_percentage}%!</span>
+                                        </div>
+                                    )}
                                     <div className="border-t border-gray-200 pt-4 flex justify-between items-end">
                                         <span className="font-playfair font-bold text-gray-900 text-lg">Total Cost</span>
-                                        <span className="font-bold text-secondary text-3xl font-playfair">${totalPrice}</span>
+                                        <span className="font-bold text-secondary text-3xl font-playfair">${totalPrice.toFixed(2)}</span>
                                     </div>
                                 </div>
 
@@ -441,7 +474,10 @@ const BookingPage = () => {
                                 </div>
                                 <div className="pt-4 flex justify-between items-center">
                                     <span className="font-bold text-gray-900 text-lg">Total Amount</span>
-                                    <span className="font-bold text-secondary text-2xl font-playfair">${totalPrice}</span>
+                                    <div className="text-right">
+                                        <span className="font-bold text-secondary text-2xl font-playfair">${totalPrice.toFixed(2)}</span>
+                                        {activePromo && <p className="text-[10px] text-emerald-600 font-bold mt-1 uppercase tracking-wider">{activePromo.title} APPLIED</p>}
+                                    </div>
                                 </div>
                             </div>
 

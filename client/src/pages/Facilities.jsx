@@ -4,7 +4,11 @@ import { Wifi, Coffee, Car, Dumbbell, Image as ImageIcon, Loader, Clock, Info, U
 import { supabase } from '../supabaseClient';
 import Modal from '../componets/Modal';
 
-const FacilityCard = ({ facility, onBook }) => {
+const FacilityCard = ({ facility, onBook, activePromo }) => {
+    const originalPrice = Number(facility.price_per_hour);
+    const hasDiscount = activePromo && activePromo.discount_percentage > 0;
+    const discountedPrice = hasDiscount ? originalPrice - (originalPrice * (activePromo.discount_percentage / 100)) : originalPrice;
+
     return (
         <div className="bg-white rounded-[40px] overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 group flex flex-col h-full border-b-4 border-b-transparent hover:border-b-secondary hover:-translate-y-2">
             {/* Image Container */}
@@ -34,13 +38,28 @@ const FacilityCard = ({ facility, onBook }) => {
                 </div>
 
                 {facility.price_per_hour > 0 && (
-                    <div className="absolute bottom-6 left-6 text-white bg-black/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10">
+                    <div className="absolute bottom-6 left-6 text-white bg-black/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 flex flex-col items-start">
+                        {hasDiscount && (
+                            <span className="bg-orange-500 text-white text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full mb-1">
+                                {activePromo.discount_percentage}% OFF
+                            </span>
+                        )}
                         <div className="flex flex-col">
-                            <div className="flex items-baseline gap-1.5">
-                                <span className="text-3xl font-black font-playfair tracking-tighter text-secondary">${facility.price_per_hour}</span>
-                                <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">/ hour</span>
-                            </div>
-                            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-300 -mt-1">Per Person</span>
+                            {hasDiscount ? (
+                                <div className="flex flex-col">
+                                    <span className="text-xs line-through text-gray-300">${originalPrice}</span>
+                                    <div className="flex items-baseline gap-1.5">
+                                        <span className="text-3xl font-black font-playfair tracking-tighter text-amber-300">${discountedPrice.toFixed(2)}</span>
+                                        <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">/ hour</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex items-baseline gap-1.5">
+                                    <span className="text-3xl font-black font-playfair tracking-tighter text-secondary">${originalPrice}</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">/ hour</span>
+                                </div>
+                            )}
+                            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-300 mt-1">Per Person</span>
                         </div>
                     </div>
                 )}
@@ -89,6 +108,7 @@ const Facilities = () => {
     const [facilities, setFacilities] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [activePromo, setActivePromo] = useState(null);
     const navigate = useNavigate();
 
     // Booking State
@@ -124,12 +144,23 @@ const Facilities = () => {
     const fetchFacilities = async () => {
         try {
             setLoading(true);
-            const res = await fetch('http://localhost:5000/api/facilities');
-            const data = await res.json();
-            if (res.ok) {
-                setFacilities(data);
+            const [facilitiesRes, promoRes] = await Promise.all([
+                fetch('http://localhost:5000/api/facilities'),
+                fetch('http://localhost:5000/api/promotions/active/Facilities')
+            ]);
+
+            if (facilitiesRes.ok) {
+                setFacilities(await facilitiesRes.json());
             } else {
                 setError('Failed to load facilities');
+            }
+
+            if (promoRes.ok) {
+                const promos = await promoRes.json();
+                if (promos && promos.length > 0) {
+                    const bestPromo = promos.reduce((prev, current) => (prev.discount_percentage > current.discount_percentage) ? prev : current);
+                    setActivePromo(bestPromo);
+                }
             }
         } catch (err) {
             setError('Error connecting to server');
@@ -166,7 +197,11 @@ const Facilities = () => {
         setSubmitting(true);
 
         try {
-            const totalPrice = (selectedFacility.price_per_hour * bookingData.duration_hours * bookingData.guest_count).toFixed(2);
+            const currentPrice = activePromo
+                ? selectedFacility.price_per_hour - (selectedFacility.price_per_hour * activePromo.discount_percentage / 100)
+                : selectedFacility.price_per_hour;
+
+            const totalPrice = (currentPrice * bookingData.duration_hours * bookingData.guest_count).toFixed(2);
 
             // 1. Check Availability
             const availRes = await fetch(`http://localhost:5000/api/facility-bookings/check-availability?facility_id=${selectedFacility.id}&booking_date=${bookingData.booking_date}&start_time=${bookingData.start_time}&guest_count=${bookingData.guest_count}`);
@@ -218,8 +253,12 @@ const Facilities = () => {
         );
     }
 
+    const currentDisplayPrice = selectedFacility
+        ? (activePromo ? selectedFacility.price_per_hour - (selectedFacility.price_per_hour * activePromo.discount_percentage / 100) : selectedFacility.price_per_hour)
+        : 0;
+
     const totalPrice = selectedFacility
-        ? (selectedFacility.price_per_hour * bookingData.duration_hours * bookingData.guest_count).toFixed(2)
+        ? (currentDisplayPrice * bookingData.duration_hours * bookingData.guest_count).toFixed(2)
         : 0;
 
     return (
@@ -261,7 +300,7 @@ const Facilities = () => {
                         {facilities.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                                 {facilities.map((facility) => (
-                                    <FacilityCard key={facility.id} facility={facility} onBook={openBookingModal} />
+                                    <FacilityCard key={facility.id} facility={facility} onBook={openBookingModal} activePromo={activePromo} />
                                 ))}
                             </div>
                         ) : (
@@ -398,10 +437,11 @@ const Facilities = () => {
                                     <span className="text-3xl font-black font-playfair text-primary">${totalPrice}</span>
                                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">USD</span>
                                 </div>
+                                {activePromo && <span className="text-[10px] font-bold text-emerald-600 block mt-1 uppercase tracking-widest">{activePromo.title} APPLIED</span>}
                             </div>
                             <div className="text-right">
                                 <span className="text-[9px] font-bold text-secondary uppercase tracking-[0.2em] block">Calculation</span>
-                                <span className="text-[11px] font-medium text-gray-500">${selectedFacility?.price_per_hour} × {bookingData.duration_hours}h × {bookingData.guest_count}p</span>
+                                <span className="text-[11px] font-medium text-gray-500">${currentDisplayPrice.toFixed(2)} × {bookingData.duration_hours}h × {bookingData.guest_count}p</span>
                             </div>
                         </div>
                     </div>

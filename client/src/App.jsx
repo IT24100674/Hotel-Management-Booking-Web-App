@@ -30,6 +30,8 @@ const RoomBookingManagement = React.lazy(() => import('./pages/admin/RoomBooking
 const EventBookingManagement = React.lazy(() => import('./pages/admin/EventBookingManagement'));
 const FacilityBookingManagement = React.lazy(() => import('./pages/admin/FacilityBookingManagement'));
 const FaqManagement = React.lazy(() => import('./pages/admin/FaqManagement'));
+const FinanceDashboard = React.lazy(() => import('./pages/admin/FinanceDashboard'));
+const PromotionManagement = React.lazy(() => import('./pages/admin/PromotionManagement'));
 const Faq = React.lazy(() => import('./pages/Faq'));
 const BookingPage = React.lazy(() => import('./pages/BookingPage'));
 const PaymentPage = React.lazy(() => import('./pages/PaymentPage'));
@@ -63,6 +65,8 @@ const App = () => {
                 <Route path='facilities' element={<FacilityManagement />} />
                 <Route path='menu' element={<MenuManagement />} />
                 <Route path='faqs' element={<FaqManagement />} />
+                <Route path='promotions' element={<PromotionManagement />} />
+                <Route path='finance' element={<FinanceDashboard />} />
                 <Route path='reviews' element={<ReviewManagement />} />
               </Route>
               <Route path='/faq' element={<Faq />} />

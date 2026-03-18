@@ -9,6 +9,7 @@ const Event = () => {
     const [loading, setLoading] = useState(true);
     const [selectedHall, setSelectedHall] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [activePromo, setActivePromo] = useState(null);
 
     // Booking Form State
     const [bookingData, setBookingData] = useState({
@@ -40,13 +41,21 @@ const Event = () => {
     const fetchHalls = async () => {
         try {
             setLoading(true);
-            const { data, error } = await supabase
-                .from('events') // Querying 'events' table which now represents halls
-                .select('*')
-                .order('price_per_guest', { ascending: true });
+            const [{ data, error }, promoRes] = await Promise.all([
+                supabase.from('events').select('*').order('price_per_guest', { ascending: true }),
+                fetch('http://localhost:5000/api/promotions/active/Events')
+            ]);
 
             if (error) throw error;
             setHalls(data || []);
+
+            if (promoRes.ok) {
+                const promos = await promoRes.json();
+                if (promos && promos.length > 0) {
+                    const bestPromo = promos.reduce((prev, current) => (prev.discount_percentage > current.discount_percentage) ? prev : current);
+                    setActivePromo(bestPromo);
+                }
+            }
         } catch (error) {
             console.error('Error fetching halls:', error);
         } finally {
@@ -118,6 +127,10 @@ const Event = () => {
             }
             // ---------------------------
 
+            const discountedPricePerGuest = activePromo
+                ? selectedHall.price_per_guest - (selectedHall.price_per_guest * activePromo.discount_percentage / 100)
+                : selectedHall.price_per_guest;
+
             const bookingPayload = {
                 hall_id: selectedHall.id,
                 user_id: user.id,
@@ -128,7 +141,7 @@ const Event = () => {
                 booking_date: bookingData.date,
                 session_type: bookingData.session_type,
                 guest_count: bookingData.guest_count,
-                total_price: selectedHall.price_per_guest * (bookingData.guest_count || 1)
+                total_price: discountedPricePerGuest * (bookingData.guest_count || 1)
             };
 
             console.log("Navigating to payment with payload:", bookingPayload);
@@ -228,10 +241,25 @@ const Event = () => {
                                         {hall.type || 'Event'}
                                     </div>
 
+                                    {activePromo && (
+                                        <div className="absolute top-12 left-4 bg-orange-500/95 backdrop-blur px-3 py-1 rounded-full text-[10px] font-bold shadow-sm text-white uppercase tracking-widest z-10">
+                                            {activePromo.discount_percentage}% OFF
+                                        </div>
+                                    )}
+
                                     <div className="absolute bottom-4 left-4 text-white">
 
                                         <div className="flex items-baseline gap-1">
-                                            <span className="text-2xl font-bold font-playfair lg:text-3xl">${hall.price_per_guest}</span>
+                                            {activePromo ? (
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm line-through text-gray-300">${hall.price_per_guest}</span>
+                                                    <span className="text-2xl font-bold font-playfair lg:text-3xl text-amber-300">
+                                                        ${(hall.price_per_guest - (hall.price_per_guest * activePromo.discount_percentage / 100)).toFixed(2)}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <span className="text-2xl font-bold font-playfair lg:text-3xl">${hall.price_per_guest}</span>
+                                            )}
                                             <span className="text-sm font-medium opacity-80 mt-1">/ guest</span>
                                         </div>
                                     </div>
@@ -365,9 +393,10 @@ const Event = () => {
                             <div className="bg-gray-50 p-4 rounded-xl flex justify-between items-center text-sm">
                                 <div className="flex flex-col">
                                     <span className="text-gray-600">Total Estimated Price:</span>
-                                    <span className="text-xs text-gray-400">({bookingData.guest_count || 1} guests x ${selectedHall.price_per_guest})</span>
+                                    <span className="text-xs text-gray-400">({bookingData.guest_count || 1} guests x ${(activePromo ? selectedHall?.price_per_guest - (selectedHall?.price_per_guest * activePromo.discount_percentage / 100) : selectedHall?.price_per_guest).toFixed(2)})</span>
+                                    {activePromo && <span className="text-[10px] font-bold text-emerald-600 mt-1">{activePromo.title} APPLIED</span>}
                                 </div>
-                                <span className="text-xl font-bold text-amber-600">${(bookingData.guest_count || 1) * (selectedHall?.price_per_guest || 0)}</span>
+                                <span className="text-xl font-bold text-amber-600">${((activePromo ? selectedHall?.price_per_guest - (selectedHall?.price_per_guest * activePromo.discount_percentage / 100) : selectedHall?.price_per_guest) * (bookingData.guest_count || 1)).toFixed(2)}</span>
                             </div>
 
                             <button
