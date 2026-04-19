@@ -23,6 +23,24 @@ const createBooking = async (req, res) => {
         return res.status(400).json({ error: 'Phone number must be exactly 10 digits.' });
     }
 
+    // --- PAST DATE & TIME VALIDATION ---
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    
+    if (booking_date < todayStr) {
+        return res.status(400).json({ error: 'Cannot book for a past date.' });
+    }
+
+    if (booking_date === todayStr) {
+        const [hours, minutes] = start_time.split(':').map(Number);
+        const bookingDateTime = new Date();
+        bookingDateTime.setHours(hours, minutes, 0, 0);
+        
+        if (bookingDateTime < now) {
+            return res.status(400).json({ error: 'Cannot book for a past time today.' });
+        }
+    }
+
     try {
         // 1. Insert Booking
         const { data: bookingData, error: bookingError } = await supabase

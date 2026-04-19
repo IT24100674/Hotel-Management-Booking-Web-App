@@ -102,10 +102,16 @@ const FacilityManagement = () => {
                         .remove([fileName]);
                 }
 
-                await fetch(`http://localhost:5000/api/facilities/${id}`, { method: 'DELETE' });
-                fetchFacilities();
+                const res = await fetch(`http://localhost:5000/api/facilities/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    fetchFacilities();
+                } else {
+                    const data = await res.json();
+                    alert(`Deletion Failed: ${data.error || 'Check if there are future bookings.'}`);
+                }
             } catch (err) {
                 console.error('Error deleting facility:', err);
+                alert('An error occurred while deleting the facility.');
             }
         }
     };

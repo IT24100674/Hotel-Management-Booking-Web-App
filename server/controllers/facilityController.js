@@ -77,14 +77,32 @@ const updateFacility = async (req, res) => {
 const deleteFacility = async (req, res) => {
     const { id } = req.params;
     try {
+        // 1. Check for future or active bookings
+        const today = new Date().toISOString().split('T')[0];
+        const { data: futureBookings, error: bookingCheckError } = await supabase
+            .from('facility_bookings')
+            .select('id')
+            .eq('facility_id', id)
+            .gte('booking_date', today)
+            .neq('status', 'Cancelled');
+
+        if (bookingCheckError) throw bookingCheckError;
+
+        if (futureBookings && futureBookings.length > 0) {
+            return res.status(400).json({
+                error: 'Cannot delete facility with active or future bookings. Please clear these bookings first.'
+            });
+        }
+
         const { error } = await supabase
             .from('facilities')
             .delete()
             .eq('id', id);
 
         if (error) throw error;
-        res.status(200).json({ message: 'Facility deleted successfully' });
+        res.status(200).json({ message: 'Facility and past history deleted successfully' });
     } catch (error) {
+        console.error('DELETE FACILITY ERROR:', error);
         res.status(500).json({ error: error.message });
     }
 };

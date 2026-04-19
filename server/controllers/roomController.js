@@ -111,7 +111,24 @@ const updateRoom = async (req, res) => {
 const deleteRoom = async (req, res) => {
     const { id } = req.params;
     try {
-        // First, get the room to find the image URL
+        // 1. Check for future or active bookings
+        const today = new Date().toISOString().split('T')[0];
+        const { data: futureBookings, error: bookingCheckError } = await supabase
+            .from('room_bookings')
+            .select('id')
+            .eq('room_id', id)
+            .gte('check_out', today)
+            .neq('status', 'Cancelled');
+
+        if (bookingCheckError) throw bookingCheckError;
+
+        if (futureBookings && futureBookings.length > 0) {
+            return res.status(400).json({
+                error: 'Cannot delete room with active or future bookings. Please clear these bookings first.'
+            });
+        }
+
+        // 2. Get the room to find the image URL
         const { data: room, error: fetchError } = await supabase
             .from('rooms')
             .select('image_url')
@@ -120,6 +137,7 @@ const deleteRoom = async (req, res) => {
 
         if (fetchError) throw fetchError;
 
+        // 3. Delete image from storage if it exists
         if (room && room.image_url) {
             const imageUrl = room.image_url;
             const fileName = imageUrl.split('/').pop();
@@ -129,18 +147,20 @@ const deleteRoom = async (req, res) => {
 
             if (storageError) {
                 console.error('Error deleting image from storage:', storageError);
-                // Continue to delete the room even if image deletion fails
+                // Continue to delete the room record even if storage deletion fails
             }
         }
 
+        // 4. Delete the room (Cascade will handle past bookings if configured)
         const { error } = await supabase
             .from('rooms')
             .delete()
             .eq('id', id);
 
         if (error) throw error;
-        res.status(200).json({ message: 'Room deleted successfully' });
+        res.status(200).json({ message: 'Room and past history deleted successfully' });
     } catch (error) {
+        console.error('DELETE ROOM ERROR:', error);
         res.status(500).json({ error: error.message });
     }
 };

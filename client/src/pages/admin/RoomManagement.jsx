@@ -87,10 +87,16 @@ const RoomManagement = () => {
     const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this room?')) {
             try {
-                await fetch(`http://localhost:5000/api/rooms/${id}`, { method: 'DELETE' });
-                fetchRooms();
+                const res = await fetch(`http://localhost:5000/api/rooms/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    fetchRooms();
+                } else {
+                    const data = await res.json();
+                    alert(`Deletion Failed: ${data.error || 'Check if there are future bookings.'}`);
+                }
             } catch (err) {
                 console.error('Error deleting room:', err);
+                alert('An error occurred while deleting the room.');
             }
         }
     };

@@ -110,12 +110,17 @@ const EventManagement = () => {
                     }
                 }
 
-                // 2. Delete the record (Backend now handles associated bookings)
-                await fetch(`http://localhost:5000/api/events/${id}`, { method: 'DELETE' });
-                fetchEvents();
+                // 2. Delete the record
+                const res = await fetch(`http://localhost:5000/api/events/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    fetchEvents();
+                } else {
+                    const data = await res.json();
+                    alert(`Deletion Failed: ${data.error || 'Check if there are future bookings.'}`);
+                }
             } catch (err) {
                 console.error('Error deleting event:', err);
-                alert('Failed to delete package');
+                alert('An error occurred while deleting the package.');
             }
         }
     };

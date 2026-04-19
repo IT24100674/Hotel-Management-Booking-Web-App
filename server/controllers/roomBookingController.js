@@ -48,6 +48,13 @@ const createRoomBooking = async (req, res) => {
         return res.status(400).json({ error: 'Missing required fields. Provide User ID or Guest Name & ID.' });
     }
 
+    // --- PAST DATE VALIDATION ---
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate date comparison
+    if (new Date(check_in) < today) {
+        return res.status(400).json({ error: 'Cannot book for a past date.' });
+    }
+
     // Strict phone number validation: ensures it is exactly 10 digits.
     // This was added to prevent malformed contact details from entering the system.
     if (!guest_phone || !/^\d{10}$/.test(guest_phone)) {

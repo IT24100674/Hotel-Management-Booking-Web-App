@@ -41,6 +41,26 @@ const createEventBooking = async (req, res) => {
         return res.status(400).json({ error: 'Phone number must be exactly 10 digits.' });
     }
 
+    // --- PAST DATE & SESSION VALIDATION ---
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const currentHour = now.getHours();
+
+    if (booking_date < todayStr) {
+        return res.status(400).json({ error: 'Cannot book for a past date.' });
+    }
+
+    if (booking_date === todayStr) {
+        // Block Morning session if it's past 10 AM
+        if (session_type === 'Morning' && currentHour >= 10) {
+            return res.status(400).json({ error: 'Morning session is no longer available for today.' });
+        }
+        // Block Evening session if it's past 4 PM
+        if (session_type === 'Evening' && currentHour >= 16) {
+            return res.status(400).json({ error: 'Evening session is no longer available for today.' });
+        }
+    }
+
     try {
         // 1. Availability Check
         const { data: existing } = await supabase

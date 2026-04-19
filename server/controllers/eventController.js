@@ -82,24 +82,33 @@ const updateEvent = async (req, res) => {
 const deleteEvent = async (req, res) => {
     const { id } = req.params;
     try {
-        // 1. Delete associated bookings first
-        const { error: bookingError } = await supabase
+        // 1. Check for future or active bookings
+        const today = new Date().toISOString().split('T')[0];
+        const { data: futureBookings, error: bookingCheckError } = await supabase
             .from('event_bookings')
-            .delete()
-            .eq('hall_id', id);
+            .select('id')
+            .eq('hall_id', id)
+            .gte('booking_date', today)
+            .neq('status', 'Cancelled');
 
-        if (bookingError) throw bookingError;
+        if (bookingCheckError) throw bookingCheckError;
 
-        // 2. Delete the event package
+        if (futureBookings && futureBookings.length > 0) {
+            return res.status(400).json({
+                error: 'Cannot delete event hall with active or future bookings. Please clear these bookings first.'
+            });
+        }
+
+        // 2. Delete the event package (Cascade will handle past bookings if configured)
         const { error } = await supabase
             .from('events')
             .delete()
             .eq('id', id);
 
         if (error) throw error;
-        res.status(200).json({ message: 'Event and associated bookings deleted successfully' });
+        res.status(200).json({ message: 'Event and past history deleted successfully' });
     } catch (error) {
-        console.error('DATABASE ERROR:', error);
+        console.error('DELETE EVENT ERROR:', error);
         res.status(500).json({ error: error.message });
     }
 };

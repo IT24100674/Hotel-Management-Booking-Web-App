@@ -3,20 +3,20 @@
 @import "tailwindcss";
 
 @theme {
-    /* Modern Luxury Palette */
-    --color-primary: #1a365d;
-    /* Deep Royal Blue - Trust, Stability */
-    --color-primary-light: #2c5282;
-    --color-primary-dark: #152c4e;
+    /* Modern Luxury Coastal Palette */
+    --color-primary: #0B2545;
+    /* Deep Ocean Blue */
+    --color-primary-light: #1e4063;
+    --color-primary-dark: #051527;
 
-    --color-secondary: #c5a059;
-    /* Muted Gold - Luxury, Accent */
-    --color-secondary-light: #deb86e;
-    --color-secondary-dark: #b08d55;
+    --color-secondary: #D4AF37;
+    /* Metallic Gold */
+    --color-secondary-light: #E9C46A;
+    --color-secondary-dark: #B08D00;
 
     --color-surface: #ffffff;
     --color-background: #f8fafc;
-    /* Very light cool gray */
+    /* Sea Foam */
     --color-text-main: #1e293b;
     --color-text-muted: #64748b;
 
