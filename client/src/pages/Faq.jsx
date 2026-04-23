@@ -121,7 +121,7 @@ const Faq = () => {
                     <div className="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-500"></div>
                     <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
                         <div>
-                            <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
+                            <h3 style={{ color: '#ffffff' }} className="text-2xl font-bold mb-2 flex items-center gap-2">
                                 <MessageSquare className="text-secondary" />
                                 Still have questions?
                             </h3>
