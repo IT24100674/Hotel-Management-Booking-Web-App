@@ -33,15 +33,15 @@ const Footer = () => {
           <ul className="flex flex-col gap-3 text-sm text-gray-400">
             <li className="flex items-start gap-3">
               <span>📍</span>
-              <span>123 Ocean Drive, Coastal City,<br /> CA 90210</span>
+              <span>No 45, Beach Road,<br />Galle, Sri Lanka</span>
             </li>
             <li className="flex items-center gap-3">
               <span>📞</span>
-              <span>+1 (555) 123-4567</span>
+              <span>+94 (91) 123-4567</span>
             </li>
             <li className="flex items-center gap-3">
               <span>✉️</span>
-              <span>reservations@goldenwaves.com</span>
+              <span>goldenwaveshotel@gmail.com</span>
             </li>
           </ul>
         </div>

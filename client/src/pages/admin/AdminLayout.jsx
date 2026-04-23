@@ -12,6 +12,8 @@ import {
     Building2,
     UtensilsCrossed,
     MessageCircleQuestion,
+    Mail,
+    Bell,
     Star,
     Home,
     LogOut,
@@ -24,9 +26,35 @@ const AdminLayout = () => {
     const navigate = useNavigate();
     const [userRole, setUserRole] = React.useState('');
     const [isLoading, setIsLoading] = React.useState(true);
+    const [messageCount, setMessageCount] = React.useState(0);
+
+    React.useEffect(() => {
+        if (location.pathname === '/admin/messages') {
+            localStorage.setItem('lastSeenMessagesTime', new Date().toISOString());
+            setMessageCount(0);
+        }
+    }, [location.pathname]);
+
+    React.useEffect(() => {
+        const fetchMessageCount = async () => {
+            if (location.pathname === '/admin/messages') return;
+            
+            try {
+                const lastSeen = localStorage.getItem('lastSeenMessagesTime') || new Date(0).toISOString();
+                const { count } = await supabase
+                    .from('contact_messages')
+                    .select('*', { count: 'exact', head: true })
+                    .gt('created_at', lastSeen);
+                if (count !== null) setMessageCount(count);
+            } catch(e) {}
+        };
+        fetchMessageCount();
+        const interval = setInterval(fetchMessageCount, 15000);
+        return () => clearInterval(interval);
+    }, [location.pathname]);
 
     const allMenuItems = [
-        { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, roles: ['owner', 'staff_manager', 'event_manager', 'room_manager', 'facility_manager', 'restaurant_manager', 'content_manager', 'support_manager', 'manager', 'receptionist'] },
+        { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, roles: ['owner', 'staff_manager', 'event_manager', 'room_manager', 'facility_manager', 'restaurant_manager', 'support_manager', 'manager', 'receptionist'] },
         { path: '/admin/room-bookings', label: 'Room Bookings', icon: CalendarPlus, roles: ['owner', 'receptionist', 'room_manager'] },
         { path: '/admin/hall-bookings', label: 'Event Bookings', icon: CalendarCheck, roles: ['owner', 'event_manager', 'receptionist'] },
         { path: '/admin/facility-bookings', label: 'Facility Bookings', icon: Key, roles: ['owner', 'facility_manager', 'receptionist'] },
@@ -35,11 +63,12 @@ const AdminLayout = () => {
         { path: '/admin/facilities', label: 'Other Facilities', icon: Building2, roles: ['owner', 'facility_manager'] },
         { path: '/admin/staff', label: 'Staff', icon: Users, roles: ['owner', 'staff_manager'] },
         { path: '/admin/menu', label: 'Menu', icon: UtensilsCrossed, roles: ['owner', 'restaurant_manager', 'content_manager'] },
-        { path: '/admin/finance', label: 'Finance Reports', icon: LineChart, roles: ['owner', 'staff_manager', 'manager'] },
-        { path: '/admin/promotions', label: 'Promotions', icon: Tag, roles: ['owner', 'manager'] },
+        { path: '/admin/finance', label: 'Finance Reports', icon: LineChart, roles: ['owner', 'staff_manager', 'manager', 'financial_manager'] },
+        { path: '/admin/promotions', label: 'Promotions', icon: Tag, roles: ['owner', 'manager', 'content_manager'] },
         { path: '/admin/faqs', label: 'Manage FAQs', icon: MessageCircleQuestion, roles: ['owner', 'content_manager', 'support_manager'] },
         { path: '/admin/reviews', label: 'Reviews', icon: Star, roles: ['owner', 'support_manager', 'manager', 'content_manager'] },
-        { path: '/', label: 'Home', icon: Home, roles: ['owner', 'staff_manager', 'event_manager', 'room_manager', 'facility_manager', 'restaurant_manager', 'content_manager', 'support_manager', 'manager', 'receptionist'] },
+        { path: '/admin/messages', label: 'Messages', icon: Mail, roles: ['owner', 'staff_manager', 'event_manager', 'room_manager', 'facility_manager', 'restaurant_manager', 'content_manager', 'support_manager', 'manager', 'receptionist', 'financial_manager'] },
+        { path: '/', label: 'Home', icon: Home, roles: ['owner', 'staff_manager', 'event_manager', 'room_manager', 'facility_manager', 'restaurant_manager', 'content_manager', 'support_manager', 'manager', 'receptionist', 'financial_manager'] },
     ];
 
     React.useEffect(() => {
@@ -105,7 +134,10 @@ const AdminLayout = () => {
             const firstAllowed = allMenuItems.find(item => item.roles.includes(role));
             if (firstAllowed) navigate(firstAllowed.path);
         } else {
-            const matchingItem = allMenuItems.find(item => currentPath.startsWith(item.path));
+            const matchingItem = [...allMenuItems]
+                .sort((a, b) => b.path.length - a.path.length)
+                .find(item => currentPath.startsWith(item.path));
+                
             if (matchingItem && !matchingItem.roles.includes(role)) {
                 alert('Access Denied');
                 const firstAllowed = allMenuItems.find(item => item.roles.includes(role));
@@ -139,11 +171,23 @@ const AdminLayout = () => {
                     <h1 className="text-2xl font-playfair font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-600 tracking-wide drop-shadow-sm">
                         Golden Waves
                     </h1>
-                    <div className="flex items-center gap-2 mt-3 bg-slate-900/50 py-1.5 px-3 rounded-md w-max border border-slate-800/50">
-                        <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
-                        <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] font-medium">
-                            {userRole.replace('_', ' ')}
-                        </p>
+                    <div className="flex items-center justify-between mt-3">
+                        <div className="flex items-center gap-2 bg-slate-900/50 py-1.5 px-3 rounded-md w-max border border-slate-800/50">
+                            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
+                            <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] font-medium">
+                                {userRole.replace('_', ' ')}
+                            </p>
+                        </div>
+                        <button 
+                            onClick={() => navigate('/admin/messages')}
+                            className="relative p-2 text-slate-400 hover:text-amber-400 hover:bg-slate-800/50 rounded-xl transition-all group"
+                            title="Messages"
+                        >
+                            <Bell size={18} className="group-hover:animate-swing" />
+                            {messageCount > 0 && (
+                                <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full ring-2 ring-slate-950 bg-red-500 animate-pulse"></span>
+                            )}
+                        </button>
                     </div>
                 </div>
 
@@ -168,6 +212,11 @@ const AdminLayout = () => {
                                     <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
                                 </div>
                                 <span className="flex-1 tracking-wide">{item.label}</span>
+                                {item.label === 'Messages' && messageCount > 0 && (
+                                    <div className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md mr-1 animate-pulse">
+                                        {messageCount}
+                                    </div>
+                                )}
                                 {isActive && <div className="w-1.5 h-1.5 rounded-full bg-slate-950 ml-2 shadow-sm"></div>}
                             </Link>
                         );

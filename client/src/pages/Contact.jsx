@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { assets } from '../assets/assets';
+import { supabase } from '../supabaseClient';
 
 const Contact = () => {
     const [formData, setFormData] = useState({
@@ -8,17 +9,38 @@ const Contact = () => {
         subject: '',
         message: ''
     });
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // TODO: Implement actual form submission logic (e.g., Supabase or EmailJS)
-        console.log('Form submitted:', formData);
-        alert('Thank you for contacting us! We will get back to you shortly.');
-        setFormData({ name: '', email: '', subject: '', message: '' });
+        setIsSubmitting(true);
+        
+        try {
+            const { error } = await supabase
+                .from('contact_messages')
+                .insert([
+                    {
+                        name: formData.name,
+                        email: formData.email,
+                        subject: formData.subject,
+                        message: formData.message
+                    }
+                ]);
+
+            if (error) throw error;
+            
+            alert('Thank you for contacting us! We will get back to you shortly.');
+            setFormData({ name: '', email: '', subject: '', message: '' });
+        } catch (err) {
+            console.error('Error submitting message:', err);
+            alert('Failed to send message. Please try again later.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -65,7 +87,7 @@ const Contact = () => {
                                 </div>
                                 <div>
                                     <h3 className="text-xl font-bold text-gray-900 mb-2">Location</h3>
-                                    <p className="text-gray-600">123 Luxury Avenue,<br />Paradise City, PC 56789</p>
+                                    <p className="text-gray-600">No 45, Beach Road,<br />Galle, Sri Lanka</p>
                                 </div>
                             </div>
 
@@ -77,7 +99,7 @@ const Contact = () => {
                                 </div>
                                 <div>
                                     <h3 className="text-xl font-bold text-gray-900 mb-2">Phone</h3>
-                                    <p className="text-gray-600">+1 (555) 123-4567<br />+1 (555) 987-6543</p>
+                                    <p className="text-gray-600">+94 (91) 123-4567<br />+94 (77) 987-6543</p>
                                 </div>
                             </div>
 
@@ -89,7 +111,7 @@ const Contact = () => {
                                 </div>
                                 <div>
                                     <h3 className="text-xl font-bold text-gray-900 mb-2">Email</h3>
-                                    <p className="text-gray-600">info@luxestay.com<br />bookings@luxestay.com</p>
+                                    <p className="text-gray-600">goldenwaveshotel@gmail.com</p>
                                 </div>
                             </div>
                         </div>
@@ -154,9 +176,10 @@ const Contact = () => {
 
                             <button
                                 type="submit"
-                                className="w-full py-4 bg-secondary text-white font-bold rounded-xl shadow-lg hover:bg-secondary-dark hover:shadow-xl transition-all transform hover:-translate-y-1"
+                                disabled={isSubmitting}
+                                className={`w-full py-4 bg-secondary text-white font-bold rounded-xl shadow-lg transition-all transform ${isSubmitting ? 'opacity-70 cursor-not-allowed' : 'hover:bg-secondary-dark hover:shadow-xl hover:-translate-y-1'}`}
                             >
-                                Send Message
+                                {isSubmitting ? 'Sending...' : 'Send Message'}
                             </button>
                         </form>
                     </div>
